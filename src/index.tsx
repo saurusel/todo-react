@@ -1,8 +1,11 @@
+import { makeServer } from '../server/mirage';
 import { StrictMode } from 'react';
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 
 console.log("[bootstrap] index.tsx loaded");
+
+makeServer();
 
 const rootEl = document.getElementById("root");
 if (!rootEl) {

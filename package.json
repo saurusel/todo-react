@@ -4,8 +4,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack serve --config webpack/webpack.dev.js",
-    "build": "webpack --config webpack/webpack.prod.js"
+    "start": "cross-env APP_LOGS=1 webpack serve --config webpack/webpack.dev.js",
+    "build": "cross-env APP_LOGS=0 webpack --config webpack/webpack.prod.js",
+    "preview": "npx serve dist -l 8081",
+    "start:logs": "cross-env APP_LOGS=1 webpack serve --config webpack/webpack.dev.js",
+    "start:no-logs": "cross-env APP_LOGS=0 webpack serve --config webpack/webpack.dev.js"
   },
   "repository": {
     "type": "git",
@@ -20,6 +23,7 @@
   "homepage": "https://github.com/saurusel/todo-react#readme",
   "description": "",
   "dependencies": {
+    "axios": "^1.13.5",
     "miragejs": "^0.1.48",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
@@ -32,8 +36,11 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "babel-loader": "^10.0.0",
+    "copy-webpack-plugin": "^13.0.1",
+    "cross-env": "^10.1.0",
     "css-loader": "^7.1.4",
     "html-webpack-plugin": "^5.6.6",
+    "serve": "^14.2.5",
     "style-loader": "^4.0.0",
     "typescript": "^5.9.3",
     "webpack": "^5.105.2",

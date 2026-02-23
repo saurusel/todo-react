@@ -1,6 +1,12 @@
 import { createServer, Response } from "miragejs";
 import db from "./db.json";
 
+const logsEnabled = process.env.APP_LOGS === "1";
+
+function mlog(...args: unknown[]) {
+    if (logsEnabled) console.log("[mirage]", ...args);
+}
+
 type Task = {
     id: number;
     title: string;
@@ -25,29 +31,29 @@ function saveTasks(tasks: Task[]) {
 }
 
 export function makeServer() {
-    console.log("[mirage] starting server");
+    mlog("starting server");
 
     let tasks: Task[] = loadTasks();
-    console.log("[mirage] tasks loaded:", tasks.length);
+    mlog("tasks loaded:", tasks.length);
 
     return createServer({
         routes() {
             this.namespace = "api";
 
             this.get("/ping", () => {
-                console.log("[mirage] GET /api/ping");
+                mlog("GET /api/ping");
                 return { ok: true, message: "pong" };
             });
 
             // READ
             this.get("/tasks", () => {
-                console.log("[mirage] GET /api/tasks");
+                mlog("GET /api/tasks");
                 return { tasks };
             });
 
             // CREATE
             this.post("/tasks", (schema, request) => {
-                console.log("[mirage] POST /api/tasks", request.requestBody);
+                mlog("POST /api/tasks", request.requestBody);
 
                 const body = JSON.parse(request.requestBody);
                 const title = body.title?.trim();
@@ -64,10 +70,7 @@ export function makeServer() {
             // UPDATE
             this.patch("/tasks/:id", (schema, request) => {
                 const id = Number(request.params.id);
-                console.log(
-                    "[mirage] PATCH /api/tasks/" + id,
-                    request.requestBody,
-                );
+                mlog("PATCH /api/tasks/" + id, request.requestBody);
                 const patch = JSON.parse(request.requestBody);
 
                 const idx = tasks.findIndex((t) => t.id === id);
@@ -89,7 +92,7 @@ export function makeServer() {
             // DELETE
             this.delete("/tasks/:id", (schema, request) => {
                 const id = Number(request.params.id);
-                console.log("[mirage] DELETE /api/tasks/" + id);
+                mlog("DELETE /api/tasks/" + id);
 
                 const exists = tasks.some((t) => t.id === id);
                 if (!exists)

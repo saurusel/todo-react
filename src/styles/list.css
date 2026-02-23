@@ -1,0 +1,101 @@
+.tasks-surface {
+    position: relative;
+}
+
+.list-area {
+    width: min(520px, 100%);
+    margin: 30px auto 0 auto;
+    position: relative;
+    height: 100%;
+}
+
+.todo-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.todo-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-divider);
+}
+
+.todo-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    cursor: pointer;
+    min-width: 0;
+}
+
+.todo-text {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.todo-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.todo-item:hover .todo-actions {
+    opacity: 1;
+    visibility: visible;
+}
+
+.todo-actions-icon {
+    width: 18px;
+    height: 18px;
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    color: var(--color-text-dim);
+}
+
+.todo-item:last-child {
+    border-bottom: none;
+}
+
+.empty-state {
+    width: min(520px, 100%);
+    display: grid;
+    place-items: center;
+    gap: 20px;
+}
+
+.empty-state__img {
+    width: 221px;
+    height: 174px;
+    object-fit: contain;
+}
+
+.empty-state__label {
+    font-size: 20px;
+    color: var(--color-control-text);
+}
+
+.todo-actions-icon:hover svg * {
+    stroke: currentColor;
+}
+
+.todo-actions .icon-edit:hover {
+    color: var(--color-primary);
+}
+
+.todo-actions .icon-delete:hover {
+    color: var(--color-deliting);
+}

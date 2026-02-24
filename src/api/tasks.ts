@@ -13,3 +13,7 @@ export async function patchTask(
     const { data } = await http.patch<{ task: Task }>(`/tasks/${id}`, patch);
     return data.task;
 }
+
+export async function deleteTask(id: number): Promise<void> {
+    await http.delete(`/tasks/${id}`);
+}

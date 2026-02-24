@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { getTasks, patchTask } from "./api/tasks";
+import { getTasks, patchTask, deleteTask } from "./api/tasks";
 import { Task } from "./types/task";
 import { TaskList } from "./components/TaskList";
 
@@ -65,7 +65,15 @@ export function App() {
     };
 
     const handleDelete = (id: number) => {
-        // console.log("[ui] delete click", id);
+        const removed = tasks.find((t) => t.id === id);
+        if (!removed) return;
+
+        setTasks((prev) => prev.filter((t) => t.id !== id));
+
+        deleteTask(id).catch((err) => {
+            console.error(err);
+            setTasks((prev) => [removed, ...prev]);
+        });
     };
 
     return (

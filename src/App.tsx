@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 
-import { getTasks, patchTask, deleteTask } from "./api/tasks";
+import { getTasks, patchTask, deleteTask, createTask } from "./api/tasks";
 import { Task } from "./types/task";
 import { TaskList } from "./components/TaskList";
+import { Modal } from "./components/Modal";
+import { ErrorModal } from "./components/ErrorModal";
 
 type Theme = "light" | "dark";
 
@@ -21,6 +23,9 @@ export function App() {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [theme, setTheme] = useState<Theme>(loadTheme());
     const [loading, setLoading] = useState(true);
+    const [newTitle, setNewTitle] = useState("");
+    const [isAddOpen, setIsAddOpen] = useState(false);
+    const [isErrorOpen, setIsErrorOpen] = useState(false);
 
     useEffect(() => {
         document.documentElement.classList.toggle(
@@ -74,6 +79,22 @@ export function App() {
             console.error(err);
             setTasks((prev) => [removed, ...prev]);
         });
+    };
+
+    const submitAdd = () => {
+        const title = newTitle.trim();
+        if (!title) {
+            setIsErrorOpen(true);
+            return;
+        }
+
+        createTask(title)
+            .then((created) => {
+                setTasks((prev) => [created, ...prev]);
+                setNewTitle("");
+                setIsAddOpen(false);
+            })
+            .catch(console.error);
     };
 
     return (
@@ -144,7 +165,7 @@ export function App() {
                         <button
                             className="fab"
                             type="button"
-                            onClick={() => undefined}
+                            onClick={() => setIsAddOpen(true)}
                         >
                             <img
                                 className="icon-img"
@@ -169,6 +190,20 @@ export function App() {
                     </div>
                 </main>
             </div>
+            <Modal
+                isOpen={isAddOpen}
+                title="ADD TODO"
+                value={newTitle}
+                onChange={setNewTitle}
+                onClose={() => setIsAddOpen(false)}
+                onApply={submitAdd}
+            />
+
+            <ErrorModal
+                isOpen={isErrorOpen}
+                message="Слишком мало символов в вашем инпуте"
+                onClose={() => setIsErrorOpen(false)}
+            />
         </div>
     );
 }

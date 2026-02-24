@@ -17,3 +17,8 @@ export async function patchTask(
 export async function deleteTask(id: number): Promise<void> {
     await http.delete(`/tasks/${id}`);
 }
+
+export async function createTask(title: string): Promise<Task> {
+    const { data } = await http.post<{ task: Task }>("/tasks", { title });
+    return data.task;
+}

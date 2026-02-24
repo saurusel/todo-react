@@ -26,6 +26,10 @@ export function App() {
     const [newTitle, setNewTitle] = useState("");
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [isErrorOpen, setIsErrorOpen] = useState(false);
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editTitle, setEditTitle] = useState("");
+    const [editInitialTitle, setEditInitialTitle] = useState("");
 
     useEffect(() => {
         document.documentElement.classList.toggle(
@@ -66,7 +70,13 @@ export function App() {
     };
 
     const handleEdit = (id: number) => {
-        // console.log("[ui] edit click", id);
+        const task = tasks.find((t) => t.id === id);
+        if (!task) return;
+
+        setEditingId(id);
+        setEditTitle(task.title);
+        setEditInitialTitle(task.title);
+        setIsEditOpen(true);
     };
 
     const handleDelete = (id: number) => {
@@ -95,6 +105,42 @@ export function App() {
                 setIsAddOpen(false);
             })
             .catch(console.error);
+    };
+
+    const submitEdit = () => {
+        if (editingId === null) return;
+
+        const nextTitle = editTitle.trim();
+        const prevTitle = editInitialTitle;
+
+        if (!nextTitle) {
+            setIsErrorOpen(true);
+            return;
+        }
+
+        if (nextTitle === prevTitle) return;
+
+        setTasks((prev) =>
+            prev.map((t) =>
+                t.id === editingId ? { ...t, title: nextTitle } : t,
+            ),
+        );
+
+        patchTask(editingId, { title: nextTitle })
+            .then(() => {
+                setIsEditOpen(false);
+                setEditingId(null);
+                setEditTitle("");
+                setEditInitialTitle("");
+            })
+            .catch((err) => {
+                console.error(err);
+                setTasks((prev) =>
+                    prev.map((t) =>
+                        t.id === editingId ? { ...t, title: prevTitle } : t,
+                    ),
+                );
+            });
     };
 
     return (
@@ -197,6 +243,19 @@ export function App() {
                 onChange={setNewTitle}
                 onClose={() => setIsAddOpen(false)}
                 onApply={submitAdd}
+            />
+
+            <Modal
+                isOpen={isEditOpen}
+                title="EDIT TODO"
+                value={editTitle}
+                onChange={setEditTitle}
+                onClose={() => setIsEditOpen(false)}
+                onApply={submitEdit}
+                isApplyDisabled={
+                    editTitle.trim() === "" ||
+                    editTitle.trim() === editInitialTitle.trim()
+                }
             />
 
             <ErrorModal

@@ -7,6 +7,7 @@ type Props = {
     onChange(value: string): void;
     onClose(): void;
     onApply(): void;
+    isApplyDisabled?: boolean;
 };
 
 export function Modal({
@@ -16,14 +17,11 @@ export function Modal({
     onChange,
     onClose,
     onApply,
+    isApplyDisabled = false,
 }: Props) {
     if (!isOpen) return null;
 
     const stop = (e: MouseEvent<HTMLDivElement>) => e.stopPropagation();
-
-    const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter") onApply();
-    };
 
     return (
         <div className="modal" onMouseDown={onClose}>
@@ -39,7 +37,9 @@ export function Modal({
                     value={value}
                     autoFocus
                     onChange={(e) => onChange(e.target.value)}
-                    onKeyDown={onKeyDown}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" && !isApplyDisabled) onApply();
+                    }}
                 />
 
                 <div className="modal-actions">

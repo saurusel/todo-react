@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { getTasks } from "./api/tasks";
+import { getTasks, patchTask } from "./api/tasks";
 import { Task } from "./types/task";
 import { TaskList } from "./components/TaskList";
 
@@ -49,6 +49,15 @@ export function App() {
         setTasks((prev) =>
             prev.map((t) => (t.id === id ? { ...t, completed } : t)),
         );
+
+        patchTask(id, { completed }).catch((err) => {
+            console.error(err);
+            setTasks((prev) =>
+                prev.map((t) =>
+                    t.id === id ? { ...t, completed: !completed } : t,
+                ),
+            );
+        });
     };
 
     const handleEdit = (id: number) => {

@@ -6,6 +6,7 @@ import { UndoDeleteStack } from "./components/UndoDeleteStack";
 import { TaskList } from "./components/TaskList";
 import { Modal } from "./components/Modal";
 import { ErrorModal } from "./components/ErrorModal";
+import { Select } from "./components/Select";
 
 type Theme = "light" | "dark";
 
@@ -29,6 +30,26 @@ type PendingDelete = {
     secondsLeft: number;
 };
 
+type FilterMode = "all" | "completed" | "incomplete";
+type SortMode =
+    | "default"
+    | "title-asc"
+    | "title-desc"
+    | "incomplete-first"
+    | "completed-first";
+
+const FILTERS: { value: FilterMode; label: string }[] = [
+    { value: "all", label: "all" },
+    { value: "completed", label: "completed" },
+    { value: "incomplete", label: "incomplete" },
+];
+
+const SORTS: { value: SortMode; label: string }[] = [
+    { value: "default", label: "sort" },
+    { value: "title-asc", label: "a-z" },
+    { value: "title-desc", label: "z-a" },
+];
+
 export function App() {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [theme, setTheme] = useState<Theme>(loadTheme());
@@ -46,6 +67,16 @@ export function App() {
 
     const [searchQuery, setSearchQuery] = useState("");
     const searchTimerRef = useRef<number | null>(null);
+
+    const [filterMode, setFilterMode] = useState<FilterMode>("all");
+    const [sortMode, setSortMode] = useState<SortMode>("default");
+
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [isSortOpen, setIsSortOpen] = useState(false);
+
+    const currentFilter =
+        FILTERS.find((f) => f.value === filterMode) || FILTERS[0];
+    const currentSort = SORTS.find((s) => s.value === sortMode) || SORTS[0];
 
     useEffect(() => {
         pendingRef.current = pendingDeletes;
@@ -76,10 +107,38 @@ export function App() {
     };
 
     const visibleTasks = useMemo(() => {
+        let result: Task[];
+        switch (filterMode) {
+            case "completed":
+                result = tasks.filter((t) => t.completed);
+                break;
+            case "incomplete":
+                result = tasks.filter((t) => !t.completed);
+                break;
+            default:
+                result = tasks;
+        }
+
         const q = (searchQuery ?? "").trim().toLowerCase();
-        if (!q) return tasks;
-        return tasks.filter((t) => t.title.toLowerCase().includes(q));
-    }, [tasks, searchQuery]);
+        if (q) {
+            result = result.filter((t) => t.title.toLowerCase().includes(q));
+        }
+
+        if (!result.length) return result;
+
+        switch (sortMode) {
+            case "title-asc":
+                return [...result].sort((a, b) =>
+                    a.title.localeCompare(b.title),
+                );
+            case "title-desc":
+                return [...result].sort((a, b) =>
+                    b.title.localeCompare(a.title),
+                );
+            default:
+                return result;
+        }
+    }, [tasks, filterMode, sortMode, searchQuery]);
 
     useEffect(() => {
         document.documentElement.classList.toggle(
@@ -333,6 +392,90 @@ export function App() {
                                         alt=""
                                     />
                                 </button>
+                            </div>
+
+                            <div
+                                className={`select-wrap js-filter-select ${isFilterOpen ? "is-open" : ""}`}
+                            >
+                                <button
+                                    className="select-btn"
+                                    type="button"
+                                    data-action="filter-toggle"
+                                    onClick={() => {
+                                        setIsFilterOpen((v) => !v);
+                                        setIsSortOpen(false);
+                                    }}
+                                >
+                                    <span className="select-value">
+                                        {currentFilter.label}
+                                    </span>
+                                    <img
+                                        className="select-icon"
+                                        src="/icons/chevron-down.svg"
+                                        alt=""
+                                    />
+                                </button>
+
+                                <ul className="select-menu">
+                                    {FILTERS.map((f) => (
+                                        <li key={f.value}>
+                                            <button
+                                                className="select-option"
+                                                type="button"
+                                                data-action="filter-set"
+                                                data-value={f.value}
+                                                onClick={() => {
+                                                    setFilterMode(f.value);
+                                                    setIsFilterOpen(false);
+                                                }}
+                                            >
+                                                {f.label}
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            <div
+                                className={`select-wrap js-sort-select ${isSortOpen ? "is-open" : ""}`}
+                            >
+                                <button
+                                    className="select-btn"
+                                    type="button"
+                                    data-action="sort-toggle"
+                                    onClick={() => {
+                                        setIsSortOpen((v) => !v);
+                                        setIsFilterOpen(false);
+                                    }}
+                                >
+                                    <span className="select-value">
+                                        {currentSort.label}
+                                    </span>
+                                    <img
+                                        className="select-icon"
+                                        src="/icons/chevron-down.svg"
+                                        alt=""
+                                    />
+                                </button>
+
+                                <ul className="select-menu">
+                                    {SORTS.map((s) => (
+                                        <li key={s.value}>
+                                            <button
+                                                className="select-option"
+                                                type="button"
+                                                data-action="sort-set"
+                                                data-value={s.value}
+                                                onClick={() => {
+                                                    setSortMode(s.value);
+                                                    setIsSortOpen(false);
+                                                }}
+                                            >
+                                                {s.label}
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
 
                             <button

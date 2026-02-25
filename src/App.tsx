@@ -23,20 +23,25 @@ function saveTheme(theme: Theme) {
 
 type PendingId = number | "delete-all";
 
-type PendingDelete = {
-    taskId: PendingId;
+type PendingSingleDelete = {
+    taskId: number;
     secondsLeft: number;
 
-    // single delete
-    task?: Task;
-    index?: number;
-    beforeId?: number | null;
-    afterId?: number | null;
-
-    // delete all
-    isDeleteAll?: true;
-    tasksSnapshot?: Task[];
+    task: Task;
+    index: number;
+    beforeId: number | null;
+    afterId: number | null;
 };
+
+type PendingDeleteAll = {
+    taskId: "delete-all";
+    secondsLeft: number;
+
+    isDeleteAll: true;
+    tasksSnapshot: Task[];
+};
+
+type PendingDelete = PendingSingleDelete | PendingDeleteAll;
 
 type FilterMode = "all" | "completed" | "incomplete";
 type SortMode =
@@ -169,19 +174,14 @@ export function App() {
             theme === "dark",
         );
         saveTheme(theme);
-        // console.log("[ui] theme applied:", theme);
     }, [theme]);
 
     useEffect(() => {
-        // console.log("[ui] load tasks...");
         getTasks()
             .then((items) => {
-                // console.log("[ui] tasks loaded:", items.length);
                 setTasks(items);
             })
-            .catch((e) => {
-                // console.error("[ui] load tasks error", e);
-            })
+            .catch((e) => {})
             .finally(() => setLoading(false));
     }, []);
 
@@ -201,7 +201,7 @@ export function App() {
         timersRef.current.delete(taskId);
     };
 
-    const restoreTask = (pending: PendingDelete) => {
+    const restoreTask = (pending: PendingSingleDelete) => {
         setTasks((prev) => {
             const beforePos =
                 pending.beforeId !== null
@@ -241,8 +241,8 @@ export function App() {
         clearTimersFor(taskId);
         setPendingDeletes((prev) => prev.filter((p) => p.taskId !== taskId));
 
-        if (pending.isDeleteAll) {
-            const snapshot = pending.tasksSnapshot ?? [];
+        if (pending.taskId === "delete-all") {
+            const snapshot = pending.tasksSnapshot;
             (async () => {
                 for (const t of snapshot) {
                     await deleteTask(t.id);
@@ -257,7 +257,6 @@ export function App() {
 
         deleteTask(taskId as number).catch((err) => {
             console.error(err);
-            // если delete упал — возвращаем на место
             restoreTask(pending);
         });
     };
@@ -269,9 +268,8 @@ export function App() {
         clearTimersFor(taskId);
         setPendingDeletes((prev) => prev.filter((p) => p.taskId !== taskId));
 
-        if (pending.isDeleteAll) {
-            const snapshot = pending.tasksSnapshot ?? [];
-            setTasks((prev) => [...prev, ...snapshot]);
+        if (pending.taskId === "delete-all") {
+            setTasks((prev) => [...prev, ...pending.tasksSnapshot]);
             return;
         }
 
@@ -316,7 +314,7 @@ export function App() {
 
         setTasks((prev) => prev.filter((t) => t.id !== id));
 
-        const pending: PendingDelete = {
+        const pending: PendingSingleDelete = {
             taskId: id,
             task,
             index,
@@ -365,7 +363,7 @@ export function App() {
 
         setTasks([]);
 
-        const pending: PendingDelete = {
+        const pending: PendingDeleteAll = {
             taskId: "delete-all",
             isDeleteAll: true,
             tasksSnapshot: snapshot,

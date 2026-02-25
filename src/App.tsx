@@ -21,13 +21,21 @@ function saveTheme(theme: Theme) {
     localStorage.setItem(THEME_KEY, theme);
 }
 
+type PendingId = number | "delete-all";
+
 type PendingDelete = {
-    taskId: number;
-    task: Task;
-    index: number;
-    beforeId: number | null;
-    afterId: number | null;
+    taskId: PendingId;
     secondsLeft: number;
+
+    // single delete
+    task?: Task;
+    index?: number;
+    beforeId?: number | null;
+    afterId?: number | null;
+
+    // delete all
+    isDeleteAll?: true;
+    tasksSnapshot?: Task[];
 };
 
 type FilterMode = "all" | "completed" | "incomplete";
@@ -84,7 +92,7 @@ export function App() {
 
     const timersRef = useRef(
         new Map<
-            number,
+            PendingId,
             { timeoutId: number | null; intervalId: number | null }
         >(),
     );
@@ -96,6 +104,21 @@ export function App() {
             }
         };
     }, []);
+
+    const deleteAllBtnRef = useRef<HTMLButtonElement | null>(null);
+
+    const shakeDeleteAll = () => {
+        const el = deleteAllBtnRef.current;
+        if (!el) return;
+
+        el.classList.remove("is-shaking");
+        void el.offsetWidth;
+        el.classList.add("is-shaking");
+
+        window.setTimeout(() => {
+            el.classList.remove("is-shaking");
+        }, 400);
+    };
 
     const scheduleSearch = (value: string) => {
         if (searchTimerRef.current !== null) {
@@ -168,12 +191,12 @@ export function App() {
         };
     }, []);
 
-    const clearTimersFor = (taskId: number) => {
+    const clearTimersFor = (taskId: PendingId) => {
         const t = timersRef.current.get(taskId);
         if (!t) return;
 
-        if (t.timeoutId !== null) window.clearTimeout(t.timeoutId);
-        if (t.intervalId !== null) window.clearInterval(t.intervalId);
+        if (t.timeoutId != null) window.clearTimeout(t.timeoutId);
+        if (t.intervalId != null) window.clearInterval(t.intervalId);
 
         timersRef.current.delete(taskId);
     };
@@ -211,26 +234,46 @@ export function App() {
         });
     };
 
-    const confirmPendingDelete = (taskId: number) => {
+    const confirmPendingDelete = (taskId: PendingId) => {
         const pending = pendingRef.current.find((p) => p.taskId === taskId);
         if (!pending) return;
 
         clearTimersFor(taskId);
         setPendingDeletes((prev) => prev.filter((p) => p.taskId !== taskId));
 
-        deleteTask(taskId).catch((err) => {
+        if (pending.isDeleteAll) {
+            const snapshot = pending.tasksSnapshot ?? [];
+            (async () => {
+                for (const t of snapshot) {
+                    await deleteTask(t.id);
+                }
+            })().catch((err) => {
+                console.error(err);
+                setTasks((prev) => [...prev, ...snapshot]);
+            });
+
+            return;
+        }
+
+        deleteTask(taskId as number).catch((err) => {
             console.error(err);
             // если delete упал — возвращаем на место
             restoreTask(pending);
         });
     };
 
-    const undoPendingDelete = (taskId: number) => {
+    const undoPendingDelete = (taskId: PendingId) => {
         const pending = pendingRef.current.find((p) => p.taskId === taskId);
         if (!pending) return;
 
         clearTimersFor(taskId);
         setPendingDeletes((prev) => prev.filter((p) => p.taskId !== taskId));
+
+        if (pending.isDeleteAll) {
+            const snapshot = pending.tasksSnapshot ?? [];
+            setTasks((prev) => [...prev, ...snapshot]);
+            return;
+        }
 
         restoreTask(pending);
     };
@@ -310,6 +353,55 @@ export function App() {
         }, 5000);
 
         timersRef.current.set(id, { intervalId, timeoutId });
+    };
+
+    const handleDeleteAll = () => {
+        if (pendingRef.current.length > 0 || tasks.length === 0) {
+            shakeDeleteAll();
+            return;
+        }
+
+        const snapshot = [...tasks];
+
+        setTasks([]);
+
+        const pending: PendingDelete = {
+            taskId: "delete-all",
+            isDeleteAll: true,
+            tasksSnapshot: snapshot,
+            secondsLeft: 5,
+        };
+
+        setPendingDeletes([pending]);
+
+        const intervalId = window.setInterval(() => {
+            setPendingDeletes((prev) => {
+                const cur = prev.find((p) => p.taskId === "delete-all");
+                if (!cur) return prev;
+
+                const nextSeconds = Math.max(0, (cur.secondsLeft || 0) - 1);
+
+                if (nextSeconds <= 0) {
+                    const timer = timersRef.current.get("delete-all");
+                    if (timer?.intervalId != null) {
+                        window.clearInterval(timer.intervalId);
+                        timer.intervalId = null;
+                    }
+                }
+
+                return prev.map((p) =>
+                    p.taskId === "delete-all"
+                        ? { ...p, secondsLeft: nextSeconds }
+                        : p,
+                );
+            });
+        }, 1000);
+
+        const timeoutId = window.setTimeout(() => {
+            confirmPendingDelete("delete-all");
+        }, 5000);
+
+        timersRef.current.set("delete-all", { intervalId, timeoutId });
     };
 
     const submitAdd = () => {
@@ -479,9 +571,10 @@ export function App() {
                             </div>
 
                             <button
+                                ref={deleteAllBtnRef}
                                 className="delete-all-btn"
                                 type="button"
-                                disabled
+                                onClick={handleDeleteAll}
                             >
                                 <img
                                     className="icon-img"

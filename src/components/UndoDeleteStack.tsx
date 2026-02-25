@@ -1,13 +1,15 @@
 import { UndoDeleteButton } from "./UndoDeleteButton";
 
+type PendingId = number | "delete-all";
+
 type PendingDelete = {
-    taskId: number;
+    taskId: PendingId;
     secondsLeft: number;
 };
 
 type Props = {
     pendingDeletes: PendingDelete[];
-    onUndo(taskId: number): void;
+    onUndo(taskId: PendingId): void;
 };
 
 export function UndoDeleteStack({ pendingDeletes, onUndo }: Props) {

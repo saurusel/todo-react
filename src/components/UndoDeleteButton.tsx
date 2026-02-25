@@ -1,13 +1,15 @@
 import { CSSProperties } from "react";
 
+type PendingId = number | "delete-all";
+
 type PendingDelete = {
-    taskId: number;
+    taskId: PendingId;
     secondsLeft: number;
 };
 
 type Props = {
     pending: PendingDelete;
-    onUndo(taskId: number): void;
+    onUndo(taskId: PendingId): void;
 };
 
 export function UndoDeleteButton({ pending, onUndo }: Props) {

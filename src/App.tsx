@@ -17,10 +17,17 @@ import { UndoDeleteStack } from "./components/UndoDeleteStack";
 import { AppHeader } from "./components/AppHeader";
 import { TasksSurface } from "./components/TasksSurface";
 import { TaskModals } from "./components/TaskModals";
+import { StatsPanel } from "./components/StatsPanel";
+import { useTodoStats } from "./hooks/useTodoStats";
 
 export function App() {
     const { tasks, setTasks, loading, toggleCompleted, addTask, updateTitle } =
         useTasks();
+
+    const { stats, bumpAdded, bumpDeleted } = useTodoStats({
+        currentCount: tasks.length,
+        isReady: !loading,
+    });
 
     const { theme, toggleTheme } = useThemeState();
 
@@ -42,7 +49,7 @@ export function App() {
         handleDelete,
         handleDeleteAll,
         deleteAllBtnRef,
-    } = usePendingDeletes({ tasks, setTasks });
+    } = usePendingDeletes({ tasks, setTasks, onDeletedConfirmed: bumpDeleted });
 
     const visibleTasks = useMemo(() => {
         return getVisibleTasks({ tasks, filterMode, sortMode, searchQuery });
@@ -83,6 +90,7 @@ export function App() {
 
         addTask(title)
             .then(() => {
+                bumpAdded(1);
                 setNewTitle("");
                 setIsAddOpen(false);
             })
@@ -112,6 +120,12 @@ export function App() {
 
     return (
         <div className="page">
+            <StatsPanel
+                currentCount={tasks.length}
+                deletedAllTime={stats.deletedAllTime}
+                addedAllTime={stats.addedAllTime}
+            />
+
             <div className="container">
                 <main className="app">
                     <AppHeader

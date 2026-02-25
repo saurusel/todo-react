@@ -11,8 +11,9 @@ import {
 export function usePendingDeletes(params: {
     tasks: Task[];
     setTasks: Dispatch<SetStateAction<Task[]>>;
+    onDeletedConfirmed?: (count: number) => void;
 }) {
-    const { tasks, setTasks } = params;
+    const { tasks, setTasks, onDeletedConfirmed } = params;
 
     const [pendingDeletes, setPendingDeletes] = useState<PendingDelete[]>([]);
     const pendingRef = useRef<PendingDelete[]>([]);
@@ -108,6 +109,7 @@ export function usePendingDeletes(params: {
                 for (const t of snapshot) {
                     await deleteTask(t.id);
                 }
+                onDeletedConfirmed?.(snapshot.length);
             })().catch((err) => {
                 console.error(err);
                 setTasks((prev) => [...prev, ...snapshot]);
@@ -116,10 +118,14 @@ export function usePendingDeletes(params: {
             return;
         }
 
-        deleteTask(taskId as number).catch((err) => {
-            console.error(err);
-            restoreTask(pending);
-        });
+        deleteTask(taskId as number)
+            .then(() => {
+                onDeletedConfirmed?.(1);
+            })
+            .catch((err) => {
+                console.error(err);
+                restoreTask(pending);
+            });
     };
 
     const undoPendingDelete = (taskId: PendingId) => {

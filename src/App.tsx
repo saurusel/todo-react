@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 
 import { getTasks, patchTask, deleteTask, createTask } from "./api/tasks";
 import { Task } from "./types/task";
+import { UndoDeleteStack } from "./components/UndoDeleteStack";
 import { TaskList } from "./components/TaskList";
 import { Modal } from "./components/Modal";
 import { ErrorModal } from "./components/ErrorModal";
@@ -19,6 +20,15 @@ function saveTheme(theme: Theme) {
     localStorage.setItem(THEME_KEY, theme);
 }
 
+type PendingDelete = {
+    taskId: number;
+    task: Task;
+    index: number;
+    beforeId: number | null;
+    afterId: number | null;
+    secondsLeft: number;
+};
+
 export function App() {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [theme, setTheme] = useState<Theme>(loadTheme());
@@ -30,6 +40,20 @@ export function App() {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editTitle, setEditTitle] = useState("");
     const [editInitialTitle, setEditInitialTitle] = useState("");
+
+    const [pendingDeletes, setPendingDeletes] = useState<PendingDelete[]>([]);
+    const pendingRef = useRef<PendingDelete[]>([]);
+
+    useEffect(() => {
+        pendingRef.current = pendingDeletes;
+    }, [pendingDeletes]);
+
+    const timersRef = useRef(
+        new Map<
+            number,
+            { timeoutId: number | null; intervalId: number | null }
+        >(),
+    );
 
     useEffect(() => {
         document.documentElement.classList.toggle(
@@ -52,6 +76,79 @@ export function App() {
             })
             .finally(() => setLoading(false));
     }, []);
+
+    useEffect(() => {
+        return () => {
+            for (const [taskId] of timersRef.current) clearTimersFor(taskId);
+        };
+    }, []);
+
+    const clearTimersFor = (taskId: number) => {
+        const t = timersRef.current.get(taskId);
+        if (!t) return;
+
+        if (t.timeoutId !== null) window.clearTimeout(t.timeoutId);
+        if (t.intervalId !== null) window.clearInterval(t.intervalId);
+
+        timersRef.current.delete(taskId);
+    };
+
+    const restoreTask = (pending: PendingDelete) => {
+        setTasks((prev) => {
+            const beforePos =
+                pending.beforeId !== null
+                    ? prev.findIndex((t) => t.id === pending.beforeId)
+                    : -1;
+            if (beforePos !== -1) {
+                const pos = beforePos + 1;
+                return [
+                    ...prev.slice(0, pos),
+                    pending.task,
+                    ...prev.slice(pos),
+                ];
+            }
+
+            const afterPos =
+                pending.afterId !== null
+                    ? prev.findIndex((t) => t.id === pending.afterId)
+                    : -1;
+            if (afterPos !== -1) {
+                const pos = afterPos;
+                return [
+                    ...prev.slice(0, pos),
+                    pending.task,
+                    ...prev.slice(pos),
+                ];
+            }
+
+            const pos = Math.min(Math.max(0, pending.index), prev.length);
+            return [...prev.slice(0, pos), pending.task, ...prev.slice(pos)];
+        });
+    };
+
+    const confirmPendingDelete = (taskId: number) => {
+        const pending = pendingRef.current.find((p) => p.taskId === taskId);
+        if (!pending) return;
+
+        clearTimersFor(taskId);
+        setPendingDeletes((prev) => prev.filter((p) => p.taskId !== taskId));
+
+        deleteTask(taskId).catch((err) => {
+            console.error(err);
+            // если delete упал — возвращаем на место
+            restoreTask(pending);
+        });
+    };
+
+    const undoPendingDelete = (taskId: number) => {
+        const pending = pendingRef.current.find((p) => p.taskId === taskId);
+        if (!pending) return;
+
+        clearTimersFor(taskId);
+        setPendingDeletes((prev) => prev.filter((p) => p.taskId !== taskId));
+
+        restoreTask(pending);
+    };
 
     const handleToggle = (id: number, completed: boolean) => {
         // console.log("[ui] toggle", { id, completed });
@@ -80,15 +177,54 @@ export function App() {
     };
 
     const handleDelete = (id: number) => {
-        const removed = tasks.find((t) => t.id === id);
-        if (!removed) return;
+        if (pendingRef.current.some((p) => p.taskId === id)) return;
+
+        const index = tasks.findIndex((t) => t.id === id);
+        if (index === -1) return;
+
+        const task = tasks[index];
+        const beforeId = index > 0 ? tasks[index - 1].id : null;
+        const afterId = index < tasks.length - 1 ? tasks[index + 1].id : null;
 
         setTasks((prev) => prev.filter((t) => t.id !== id));
 
-        deleteTask(id).catch((err) => {
-            console.error(err);
-            setTasks((prev) => [removed, ...prev]);
-        });
+        const pending: PendingDelete = {
+            taskId: id,
+            task,
+            index,
+            beforeId,
+            afterId,
+            secondsLeft: 5,
+        };
+
+        setPendingDeletes((prev) => [...prev, pending]);
+
+        const intervalId = window.setInterval(() => {
+            setPendingDeletes((prev) => {
+                const cur = prev.find((p) => p.taskId === id);
+                if (!cur) return prev;
+
+                const nextSeconds = Math.max(0, cur.secondsLeft - 1);
+
+                if (nextSeconds <= 0) {
+                    const timer = timersRef.current.get(id);
+                    if (timer?.intervalId != null) {
+                        window.clearInterval(timer.intervalId);
+                        timer.intervalId = null;
+                    }
+                }
+
+                return prev.map((p) =>
+                    p.taskId === id ? { ...p, secondsLeft: nextSeconds } : p,
+                );
+            });
+        }, 1000);
+
+        const timeoutId = window.setTimeout(() => {
+            confirmPendingDelete(id);
+        }, 5000);
+
+        timersRef.current.set(id, { intervalId, timeoutId });
     };
 
     const submitAdd = () => {
@@ -262,6 +398,11 @@ export function App() {
                 isOpen={isErrorOpen}
                 message="Слишком мало символов в вашем инпуте"
                 onClose={() => setIsErrorOpen(false)}
+            />
+
+            <UndoDeleteStack
+                pendingDeletes={pendingDeletes}
+                onUndo={undoPendingDelete}
             />
         </div>
     );

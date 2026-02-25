@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 
 import { getTasks, patchTask, deleteTask, createTask } from "./api/tasks";
 import { Task } from "./types/task";
@@ -44,6 +44,9 @@ export function App() {
     const [pendingDeletes, setPendingDeletes] = useState<PendingDelete[]>([]);
     const pendingRef = useRef<PendingDelete[]>([]);
 
+    const [searchQuery, setSearchQuery] = useState("");
+    const searchTimerRef = useRef<number | null>(null);
+
     useEffect(() => {
         pendingRef.current = pendingDeletes;
     }, [pendingDeletes]);
@@ -54,6 +57,29 @@ export function App() {
             { timeoutId: number | null; intervalId: number | null }
         >(),
     );
+
+    useEffect(() => {
+        return () => {
+            if (searchTimerRef.current !== null) {
+                window.clearTimeout(searchTimerRef.current);
+            }
+        };
+    }, []);
+
+    const scheduleSearch = (value: string) => {
+        if (searchTimerRef.current !== null) {
+            window.clearTimeout(searchTimerRef.current);
+        }
+        searchTimerRef.current = window.setTimeout(() => {
+            setSearchQuery(value);
+        }, 300);
+    };
+
+    const visibleTasks = useMemo(() => {
+        const q = (searchQuery ?? "").trim().toLowerCase();
+        if (!q) return tasks;
+        return tasks.filter((t) => t.title.toLowerCase().includes(q));
+    }, [tasks, searchQuery]);
 
     useEffect(() => {
         document.documentElement.classList.toggle(
@@ -293,6 +319,9 @@ export function App() {
                                     className="input js-search"
                                     placeholder="Search note..."
                                     autoComplete="off"
+                                    onChange={(e) =>
+                                        scheduleSearch(e.target.value)
+                                    }
                                 />
                                 <button
                                     className="input-icon-btn"
@@ -361,7 +390,7 @@ export function App() {
                                 <div style={{ padding: 16 }}>Loading...</div>
                             ) : (
                                 <TaskList
-                                    tasks={tasks}
+                                    tasks={visibleTasks}
                                     theme={theme}
                                     onToggle={handleToggle}
                                     onEdit={handleEdit}

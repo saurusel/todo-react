@@ -4,9 +4,9 @@ type Option = {
 };
 
 type Props = {
-    wrapClass: string; // "js-filter-select" | "js-sort-select"
-    actionToggle: string; // "filter-toggle" | "sort-toggle"
-    actionSet: string; // "filter-set" | "sort-set"
+    wrapClass: string;
+    actionToggle: string;
+    actionSet: string;
     isOpen: boolean;
     currentLabel: string;
     options: Option[];

@@ -1,14 +1,8 @@
 import { UndoDeleteButton } from "./UndoDeleteButton";
-
-type PendingId = number | "delete-all";
-
-type PendingDelete = {
-    taskId: PendingId;
-    secondsLeft: number;
-};
+import { PendingId, PendingDeleteCountdown } from "../types/pendingDelete";
 
 type Props = {
-    pendingDeletes: PendingDelete[];
+    pendingDeletes: PendingDeleteCountdown[];
     onUndo(taskId: PendingId): void;
 };
 

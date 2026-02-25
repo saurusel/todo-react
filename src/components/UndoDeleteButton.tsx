@@ -1,14 +1,8 @@
 import { CSSProperties } from "react";
-
-type PendingId = number | "delete-all";
-
-type PendingDelete = {
-    taskId: PendingId;
-    secondsLeft: number;
-};
+import { PendingId, PendingDeleteCountdown } from "../types/pendingDelete";
 
 type Props = {
-    pending: PendingDelete;
+    pending: PendingDeleteCountdown;
     onUndo(taskId: PendingId): void;
 };
 

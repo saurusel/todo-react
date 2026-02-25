@@ -484,90 +484,40 @@ export function App() {
                                 </button>
                             </div>
 
-                            <div
-                                className={`select-wrap js-filter-select ${isFilterOpen ? "is-open" : ""}`}
-                            >
-                                <button
-                                    className="select-btn"
-                                    type="button"
-                                    data-action="filter-toggle"
-                                    onClick={() => {
-                                        setIsFilterOpen((v) => !v);
-                                        setIsSortOpen(false);
-                                    }}
-                                >
-                                    <span className="select-value">
-                                        {currentFilter.label}
-                                    </span>
-                                    <img
-                                        className="select-icon"
-                                        src="/icons/chevron-down.svg"
-                                        alt=""
-                                    />
-                                </button>
+                            <Select
+                                wrapClass="js-filter-select"
+                                actionToggle="filter-toggle"
+                                actionSet="filter-set"
+                                isOpen={isFilterOpen}
+                                currentLabel={currentFilter.label}
+                                options={FILTERS}
+                                onToggle={() => {
+                                    setIsFilterOpen((v) => !v);
+                                    setIsSortOpen(false);
+                                }}
+                                onSelect={(value) => {
+                                    setFilterMode(value as FilterMode);
+                                    setIsFilterOpen(false);
+                                }}
+                            />
 
-                                <ul className="select-menu">
-                                    {FILTERS.map((f) => (
-                                        <li key={f.value}>
-                                            <button
-                                                className="select-option"
-                                                type="button"
-                                                data-action="filter-set"
-                                                data-value={f.value}
-                                                onClick={() => {
-                                                    setFilterMode(f.value);
-                                                    setIsFilterOpen(false);
-                                                }}
-                                            >
-                                                {f.label}
-                                            </button>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-
-                            <div
-                                className={`select-wrap js-sort-select ${isSortOpen ? "is-open" : ""}`}
-                            >
-                                <button
-                                    className="select-btn"
-                                    type="button"
-                                    data-action="sort-toggle"
-                                    onClick={() => {
-                                        setIsSortOpen((v) => !v);
-                                        setIsFilterOpen(false);
-                                    }}
-                                >
-                                    <span className="select-value">
-                                        {currentSort.label}
-                                    </span>
-                                    <img
-                                        className="select-icon"
-                                        src="/icons/chevron-down.svg"
-                                        alt=""
-                                    />
-                                </button>
-
-                                <ul className="select-menu">
-                                    {SORTS.map((s) => (
-                                        <li key={s.value}>
-                                            <button
-                                                className="select-option"
-                                                type="button"
-                                                data-action="sort-set"
-                                                data-value={s.value}
-                                                onClick={() => {
-                                                    setSortMode(s.value);
-                                                    setIsSortOpen(false);
-                                                }}
-                                            >
-                                                {s.label}
-                                            </button>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-
+                            <Select
+                                wrapClass="js-sort-select"
+                                actionToggle="sort-toggle"
+                                actionSet="sort-set"
+                                isOpen={isSortOpen}
+                                currentLabel={currentSort.label}
+                                options={SORTS}
+                                onToggle={() => {
+                                    setIsSortOpen((v) => !v);
+                                    setIsFilterOpen(false);
+                                }}
+                                onSelect={(value) => {
+                                    setSortMode(value as SortMode);
+                                    setIsSortOpen(false);
+                                }}
+                            />
+                            
                             <button
                                 ref={deleteAllBtnRef}
                                 className="delete-all-btn"

@@ -12,12 +12,14 @@ type Props = {
     onDelete(id: number): void;
 
     onOpenAdd(): void;
+    enteringTaskId?: number | null;
 };
 
 export function TasksSurface({
     loading,
     theme,
     tasks,
+    enteringTaskId,
     onToggle,
     onEdit,
     onDelete,
@@ -36,6 +38,7 @@ export function TasksSurface({
                     <TaskList
                         tasks={tasks}
                         theme={theme}
+                        enteringTaskId={enteringTaskId}
                         onToggle={onToggle}
                         onEdit={onEdit}
                         onDelete={onDelete}

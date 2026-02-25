@@ -2,14 +2,15 @@ import { Task } from "../types/task";
 
 type Props = {
     task: Task;
+    isEntering?: boolean;
     onToggle?(id: number, completed: boolean): void;
     onEdit?(id: number): void;
     onDelete?(id: number): void;
 };
 
-export function TaskItem({ task, onToggle, onEdit, onDelete }: Props) {
+export function TaskItem({ task, isEntering, onToggle, onEdit, onDelete }: Props) {
     return (
-        <li className="todo-item" data-id={task.id}>
+        <li className={`todo-item${isEntering ? " is-entering" : ""}`} data-id={task.id}>
             <label className="todo-main">
                 <input
                     className="checkbox-input"

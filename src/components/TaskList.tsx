@@ -4,12 +4,20 @@ import { TaskItem } from "./TaskItem";
 type Props = {
     tasks: Task[];
     theme: "light" | "dark";
+    enteringTaskId?: number | null;
     onToggle?(id: number, completed: boolean): void;
     onEdit?(id: number): void;
     onDelete?(id: number): void;
 };
 
-export function TaskList({ tasks, theme, onToggle, onEdit, onDelete }: Props) {
+export function TaskList({
+    tasks,
+    theme,
+    enteringTaskId,
+    onToggle,
+    onEdit,
+    onDelete,
+}: Props) {
     if (!tasks.length) {
         const emptySrc =
             theme === "dark"
@@ -30,6 +38,7 @@ export function TaskList({ tasks, theme, onToggle, onEdit, onDelete }: Props) {
                 <TaskItem
                     key={t.id}
                     task={t}
+                    isEntering={enteringTaskId === t.id}
                     onToggle={onToggle}
                     onEdit={onEdit}
                     onDelete={onDelete}

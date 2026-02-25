@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import {
     FilterMode,
@@ -63,6 +63,8 @@ export function App() {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editTitle, setEditTitle] = useState("");
     const [editInitialTitle, setEditInitialTitle] = useState("");
+    const [enteringTaskId, setEnteringTaskId] = useState<number | null>(null);
+    const enterTimerRef = useRef<number | null>(null);
 
     const handleEdit = (id: number) => {
         const task = tasks.find((t) => t.id === id);
@@ -89,8 +91,16 @@ export function App() {
         }
 
         addTask(title)
-            .then(() => {
+            .then((created) => {
                 bumpAdded(1);
+                if (enterTimerRef.current !== null) {
+                    window.clearTimeout(enterTimerRef.current);
+                }
+                setEnteringTaskId(created.id);
+                enterTimerRef.current = window.setTimeout(() => {
+                    setEnteringTaskId(null);
+                }, 300);
+
                 setNewTitle("");
                 setIsAddOpen(false);
             })
@@ -167,6 +177,7 @@ export function App() {
                         onEdit={handleEdit}
                         onDelete={handleDelete}
                         onOpenAdd={() => setIsAddOpen(true)}
+                        enteringTaskId={enteringTaskId}
                     />
                 </main>
             </div>

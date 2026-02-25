@@ -99,3 +99,18 @@
 .todo-actions .icon-delete:hover {
     color: var(--color-deliting);
 }
+
+@keyframes todoItemEnter {
+    0% {
+        transform: translateX(-16px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.todo-item.is-entering {
+    animation: todoItemEnter 0.3s ease-out;
+}

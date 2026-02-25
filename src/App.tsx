@@ -1,85 +1,34 @@
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 
-import { getTasks, patchTask, deleteTask, createTask } from "./api/tasks";
-import { Task } from "./types/task";
+import {
+    FilterMode,
+    SortMode,
+    FILTERS,
+    SORTS,
+    getVisibleTasks,
+} from "./app/taskView";
+
+import { useThemeState } from "./hooks/useThemeState";
+import { useDebouncedState } from "./hooks/useDebouncedState";
+import { useTasks } from "./hooks/useTasks";
+import { usePendingDeletes } from "./hooks/usePendingDeletes";
+
 import { UndoDeleteStack } from "./components/UndoDeleteStack";
-import { TaskList } from "./components/TaskList";
-import { Modal } from "./components/Modal";
-import { ErrorModal } from "./components/ErrorModal";
-import { Select } from "./components/Select";
-
-type Theme = "light" | "dark";
-
-const THEME_KEY = "todo_theme";
-
-function loadTheme(): Theme {
-    const raw = localStorage.getItem(THEME_KEY);
-    return raw === "dark" ? "dark" : "light";
-}
-
-function saveTheme(theme: Theme) {
-    localStorage.setItem(THEME_KEY, theme);
-}
-
-type PendingId = number | "delete-all";
-
-type PendingSingleDelete = {
-    taskId: number;
-    secondsLeft: number;
-
-    task: Task;
-    index: number;
-    beforeId: number | null;
-    afterId: number | null;
-};
-
-type PendingDeleteAll = {
-    taskId: "delete-all";
-    secondsLeft: number;
-
-    isDeleteAll: true;
-    tasksSnapshot: Task[];
-};
-
-type PendingDelete = PendingSingleDelete | PendingDeleteAll;
-
-type FilterMode = "all" | "completed" | "incomplete";
-type SortMode =
-    | "default"
-    | "title-asc"
-    | "title-desc"
-    | "incomplete-first"
-    | "completed-first";
-
-const FILTERS: { value: FilterMode; label: string }[] = [
-    { value: "all", label: "all" },
-    { value: "completed", label: "completed" },
-    { value: "incomplete", label: "incomplete" },
-];
-
-const SORTS: { value: SortMode; label: string }[] = [
-    { value: "default", label: "sort" },
-    { value: "title-asc", label: "a-z" },
-    { value: "title-desc", label: "z-a" },
-];
+import { AppHeader } from "./components/AppHeader";
+import { TasksSurface } from "./components/TasksSurface";
+import { TaskModals } from "./components/TaskModals";
 
 export function App() {
-    const [tasks, setTasks] = useState<Task[]>([]);
-    const [theme, setTheme] = useState<Theme>(loadTheme());
-    const [loading, setLoading] = useState(true);
-    const [newTitle, setNewTitle] = useState("");
-    const [isAddOpen, setIsAddOpen] = useState(false);
-    const [isErrorOpen, setIsErrorOpen] = useState(false);
-    const [isEditOpen, setIsEditOpen] = useState(false);
-    const [editingId, setEditingId] = useState<number | null>(null);
-    const [editTitle, setEditTitle] = useState("");
-    const [editInitialTitle, setEditInitialTitle] = useState("");
+    const { tasks, setTasks, loading, toggleCompleted, addTask, updateTitle } =
+        useTasks();
 
-    const [pendingDeletes, setPendingDeletes] = useState<PendingDelete[]>([]);
-    const pendingRef = useRef<PendingDelete[]>([]);
+    const { theme, toggleTheme } = useThemeState();
 
-    const [searchQuery, setSearchQuery] = useState("");
-    const searchTimerRef = useRef<number | null>(null);
+    const {
+        value: searchInput,
+        setValue: setSearchInput,
+        debounced: searchQuery,
+    } = useDebouncedState("", 300);
 
     const [filterMode, setFilterMode] = useState<FilterMode>("all");
     const [sortMode, setSortMode] = useState<SortMode>("default");
@@ -87,210 +36,26 @@ export function App() {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [isSortOpen, setIsSortOpen] = useState(false);
 
-    const currentFilter =
-        FILTERS.find((f) => f.value === filterMode) || FILTERS[0];
-    const currentSort = SORTS.find((s) => s.value === sortMode) || SORTS[0];
-
-    useEffect(() => {
-        pendingRef.current = pendingDeletes;
-    }, [pendingDeletes]);
-
-    const timersRef = useRef(
-        new Map<
-            PendingId,
-            { timeoutId: number | null; intervalId: number | null }
-        >(),
-    );
-
-    useEffect(() => {
-        return () => {
-            if (searchTimerRef.current !== null) {
-                window.clearTimeout(searchTimerRef.current);
-            }
-        };
-    }, []);
-
-    const deleteAllBtnRef = useRef<HTMLButtonElement | null>(null);
-
-    const shakeDeleteAll = () => {
-        const el = deleteAllBtnRef.current;
-        if (!el) return;
-
-        el.classList.remove("is-shaking");
-        void el.offsetWidth;
-        el.classList.add("is-shaking");
-
-        window.setTimeout(() => {
-            el.classList.remove("is-shaking");
-        }, 400);
-    };
-
-    const scheduleSearch = (value: string) => {
-        if (searchTimerRef.current !== null) {
-            window.clearTimeout(searchTimerRef.current);
-        }
-        searchTimerRef.current = window.setTimeout(() => {
-            setSearchQuery(value);
-        }, 300);
-    };
+    const {
+        pendingDeletes,
+        undoPendingDelete,
+        handleDelete,
+        handleDeleteAll,
+        deleteAllBtnRef,
+    } = usePendingDeletes({ tasks, setTasks });
 
     const visibleTasks = useMemo(() => {
-        let result: Task[];
-        switch (filterMode) {
-            case "completed":
-                result = tasks.filter((t) => t.completed);
-                break;
-            case "incomplete":
-                result = tasks.filter((t) => !t.completed);
-                break;
-            default:
-                result = tasks;
-        }
-
-        const q = searchQuery.trim().toLowerCase();
-        if (q) {
-            result = result.filter((t) => t.title.toLowerCase().includes(q));
-        }
-
-        if (!result.length) return result;
-
-        switch (sortMode) {
-            case "title-asc":
-                return [...result].sort((a, b) =>
-                    a.title.localeCompare(b.title),
-                );
-            case "title-desc":
-                return [...result].sort((a, b) =>
-                    b.title.localeCompare(a.title),
-                );
-            default:
-                return result;
-        }
+        return getVisibleTasks({ tasks, filterMode, sortMode, searchQuery });
     }, [tasks, filterMode, sortMode, searchQuery]);
 
-    useEffect(() => {
-        document.documentElement.classList.toggle(
-            "theme-dark",
-            theme === "dark",
-        );
-        saveTheme(theme);
-    }, [theme]);
+    const [newTitle, setNewTitle] = useState("");
+    const [isAddOpen, setIsAddOpen] = useState(false);
+    const [isErrorOpen, setIsErrorOpen] = useState(false);
 
-    useEffect(() => {
-        getTasks()
-            .then((items) => {
-                setTasks(items);
-            })
-            .catch((e) => {})
-            .finally(() => setLoading(false));
-    }, []);
-
-    useEffect(() => {
-        return () => {
-            for (const [taskId] of timersRef.current) clearTimersFor(taskId);
-        };
-    }, []);
-
-    const clearTimersFor = (taskId: PendingId) => {
-        const t = timersRef.current.get(taskId);
-        if (!t) return;
-
-        if (t.timeoutId != null) window.clearTimeout(t.timeoutId);
-        if (t.intervalId != null) window.clearInterval(t.intervalId);
-
-        timersRef.current.delete(taskId);
-    };
-
-    const restoreTask = (pending: PendingSingleDelete) => {
-        setTasks((prev) => {
-            const beforePos =
-                pending.beforeId !== null
-                    ? prev.findIndex((t) => t.id === pending.beforeId)
-                    : -1;
-            if (beforePos !== -1) {
-                const pos = beforePos + 1;
-                return [
-                    ...prev.slice(0, pos),
-                    pending.task,
-                    ...prev.slice(pos),
-                ];
-            }
-
-            const afterPos =
-                pending.afterId !== null
-                    ? prev.findIndex((t) => t.id === pending.afterId)
-                    : -1;
-            if (afterPos !== -1) {
-                const pos = afterPos;
-                return [
-                    ...prev.slice(0, pos),
-                    pending.task,
-                    ...prev.slice(pos),
-                ];
-            }
-
-            const pos = Math.min(Math.max(0, pending.index), prev.length);
-            return [...prev.slice(0, pos), pending.task, ...prev.slice(pos)];
-        });
-    };
-
-    const confirmPendingDelete = (taskId: PendingId) => {
-        const pending = pendingRef.current.find((p) => p.taskId === taskId);
-        if (!pending) return;
-
-        clearTimersFor(taskId);
-        setPendingDeletes((prev) => prev.filter((p) => p.taskId !== taskId));
-
-        if (pending.taskId === "delete-all") {
-            const snapshot = pending.tasksSnapshot;
-            (async () => {
-                for (const t of snapshot) {
-                    await deleteTask(t.id);
-                }
-            })().catch((err) => {
-                console.error(err);
-                setTasks((prev) => [...prev, ...snapshot]);
-            });
-
-            return;
-        }
-
-        deleteTask(taskId as number).catch((err) => {
-            console.error(err);
-            restoreTask(pending);
-        });
-    };
-
-    const undoPendingDelete = (taskId: PendingId) => {
-        const pending = pendingRef.current.find((p) => p.taskId === taskId);
-        if (!pending) return;
-
-        clearTimersFor(taskId);
-        setPendingDeletes((prev) => prev.filter((p) => p.taskId !== taskId));
-
-        if (pending.taskId === "delete-all") {
-            setTasks((prev) => [...prev, ...pending.tasksSnapshot]);
-            return;
-        }
-
-        restoreTask(pending);
-    };
-
-    const handleToggle = (id: number, completed: boolean) => {
-        // console.log("[ui] toggle", { id, completed });
-        setTasks((prev) =>
-            prev.map((t) => (t.id === id ? { ...t, completed } : t)),
-        );
-
-        patchTask(id, { completed }).catch((err) => {
-            console.error(err);
-            setTasks((prev) =>
-                prev.map((t) =>
-                    t.id === id ? { ...t, completed: !completed } : t,
-                ),
-            );
-        });
-    };
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editTitle, setEditTitle] = useState("");
+    const [editInitialTitle, setEditInitialTitle] = useState("");
 
     const handleEdit = (id: number) => {
         const task = tasks.find((t) => t.id === id);
@@ -302,104 +67,11 @@ export function App() {
         setIsEditOpen(true);
     };
 
-    const handleDelete = (id: number) => {
-        if (pendingRef.current.some((p) => p.taskId === id)) return;
-
-        const index = tasks.findIndex((t) => t.id === id);
-        if (index === -1) return;
-
-        const task = tasks[index];
-        const beforeId = index > 0 ? tasks[index - 1].id : null;
-        const afterId = index < tasks.length - 1 ? tasks[index + 1].id : null;
-
-        setTasks((prev) => prev.filter((t) => t.id !== id));
-
-        const pending: PendingSingleDelete = {
-            taskId: id,
-            task,
-            index,
-            beforeId,
-            afterId,
-            secondsLeft: 5,
-        };
-
-        setPendingDeletes((prev) => [...prev, pending]);
-
-        const intervalId = window.setInterval(() => {
-            setPendingDeletes((prev) => {
-                const cur = prev.find((p) => p.taskId === id);
-                if (!cur) return prev;
-
-                const nextSeconds = Math.max(0, cur.secondsLeft - 1);
-
-                if (nextSeconds <= 0) {
-                    const timer = timersRef.current.get(id);
-                    if (timer?.intervalId != null) {
-                        window.clearInterval(timer.intervalId);
-                        timer.intervalId = null;
-                    }
-                }
-
-                return prev.map((p) =>
-                    p.taskId === id ? { ...p, secondsLeft: nextSeconds } : p,
-                );
-            });
-        }, 1000);
-
-        const timeoutId = window.setTimeout(() => {
-            confirmPendingDelete(id);
-        }, 5000);
-
-        timersRef.current.set(id, { intervalId, timeoutId });
-    };
-
-    const handleDeleteAll = () => {
-        if (pendingRef.current.length > 0 || tasks.length === 0) {
-            shakeDeleteAll();
-            return;
-        }
-
-        const snapshot = [...tasks];
-
-        setTasks([]);
-
-        const pending: PendingDeleteAll = {
-            taskId: "delete-all",
-            isDeleteAll: true,
-            tasksSnapshot: snapshot,
-            secondsLeft: 5,
-        };
-
-        setPendingDeletes([pending]);
-
-        const intervalId = window.setInterval(() => {
-            setPendingDeletes((prev) => {
-                const cur = prev.find((p) => p.taskId === "delete-all");
-                if (!cur) return prev;
-
-                const nextSeconds = Math.max(0, cur.secondsLeft - 1);
-
-                if (nextSeconds <= 0) {
-                    const timer = timersRef.current.get("delete-all");
-                    if (timer?.intervalId != null) {
-                        window.clearInterval(timer.intervalId);
-                        timer.intervalId = null;
-                    }
-                }
-
-                return prev.map((p) =>
-                    p.taskId === "delete-all"
-                        ? { ...p, secondsLeft: nextSeconds }
-                        : p,
-                );
-            });
-        }, 1000);
-
-        const timeoutId = window.setTimeout(() => {
-            confirmPendingDelete("delete-all");
-        }, 5000);
-
-        timersRef.current.set("delete-all", { intervalId, timeoutId });
+    const closeEdit = () => {
+        setIsEditOpen(false);
+        setEditingId(null);
+        setEditTitle("");
+        setEditInitialTitle("");
     };
 
     const submitAdd = () => {
@@ -409,9 +81,8 @@ export function App() {
             return;
         }
 
-        createTask(title)
-            .then((created) => {
-                setTasks((prev) => [created, ...prev]);
+        addTask(title)
+            .then(() => {
                 setNewTitle("");
                 setIsAddOpen(false);
             })
@@ -429,188 +100,78 @@ export function App() {
             return;
         }
 
-        if (nextTitle === prevTitle) return;
+        if (nextTitle === prevTitle.trim()) return;
 
-        setTasks((prev) =>
-            prev.map((t) =>
-                t.id === editingId ? { ...t, title: nextTitle } : t,
-            ),
-        );
-
-        patchTask(editingId, { title: nextTitle })
-            .then(() => {
-                setIsEditOpen(false);
-                setEditingId(null);
-                setEditTitle("");
-                setEditInitialTitle("");
-            })
-            .catch((err) => {
-                console.error(err);
-                setTasks((prev) =>
-                    prev.map((t) =>
-                        t.id === editingId ? { ...t, title: prevTitle } : t,
-                    ),
-                );
-            });
+        updateTitle(editingId, nextTitle, prevTitle)
+            .then(() => closeEdit())
+            .catch(() => {});
     };
+
+    const isEditApplyDisabled =
+        editTitle.trim() === "" || editTitle.trim() === editInitialTitle.trim();
 
     return (
         <div className="page">
             <div className="container">
                 <main className="app">
-                    <header className="app-header">
-                        <h1 className="app-title">todo list</h1>
+                    <AppHeader
+                        theme={theme}
+                        onToggleTheme={toggleTheme}
+                        searchInput={searchInput}
+                        onChangeSearch={setSearchInput}
+                        filterMode={filterMode}
+                        filterOptions={FILTERS}
+                        isFilterOpen={isFilterOpen}
+                        onToggleFilter={() => {
+                            setIsFilterOpen((v) => !v);
+                            setIsSortOpen(false);
+                        }}
+                        onSelectFilter={(value) => {
+                            setFilterMode(value);
+                            setIsFilterOpen(false);
+                        }}
+                        sortMode={sortMode}
+                        sortOptions={SORTS}
+                        isSortOpen={isSortOpen}
+                        onToggleSort={() => {
+                            setIsSortOpen((v) => !v);
+                            setIsFilterOpen(false);
+                        }}
+                        onSelectSort={(value) => {
+                            setSortMode(value);
+                            setIsSortOpen(false);
+                        }}
+                        deleteAllBtnRef={deleteAllBtnRef}
+                        onDeleteAll={handleDeleteAll}
+                    />
 
-                        <div className="toolbar">
-                            <div className="input-wrap">
-                                <input
-                                    type="text"
-                                    className="input js-search"
-                                    placeholder="Search note..."
-                                    autoComplete="off"
-                                    onChange={(e) =>
-                                        scheduleSearch(e.target.value)
-                                    }
-                                />
-                                <button
-                                    className="input-icon-btn"
-                                    type="button"
-                                >
-                                    <img
-                                        className="icon-img"
-                                        src="/icons/search.svg"
-                                        alt=""
-                                    />
-                                </button>
-                            </div>
-
-                            <Select
-                                wrapClass="js-filter-select"
-                                actionToggle="filter-toggle"
-                                actionSet="filter-set"
-                                isOpen={isFilterOpen}
-                                currentLabel={currentFilter.label}
-                                options={FILTERS}
-                                onToggle={() => {
-                                    setIsFilterOpen((v) => !v);
-                                    setIsSortOpen(false);
-                                }}
-                                onSelect={(value) => {
-                                    setFilterMode(value as FilterMode);
-                                    setIsFilterOpen(false);
-                                }}
-                            />
-
-                            <Select
-                                wrapClass="js-sort-select"
-                                actionToggle="sort-toggle"
-                                actionSet="sort-set"
-                                isOpen={isSortOpen}
-                                currentLabel={currentSort.label}
-                                options={SORTS}
-                                onToggle={() => {
-                                    setIsSortOpen((v) => !v);
-                                    setIsFilterOpen(false);
-                                }}
-                                onSelect={(value) => {
-                                    setSortMode(value as SortMode);
-                                    setIsSortOpen(false);
-                                }}
-                            />
-
-                            <button
-                                ref={deleteAllBtnRef}
-                                className="delete-all-btn"
-                                type="button"
-                                onClick={handleDeleteAll}
-                            >
-                                <img
-                                    className="icon-img"
-                                    src="/icons/trash.svg"
-                                    alt=""
-                                />
-                                <span className="delete-all-label">
-                                    delete all
-                                </span>
-                            </button>
-
-                            <button
-                                className="icon-btn js-theme-toggle"
-                                type="button"
-                                onClick={() =>
-                                    setTheme((t) =>
-                                        t === "dark" ? "light" : "dark",
-                                    )
-                                }
-                            >
-                                <img
-                                    className="icon-img"
-                                    src={
-                                        theme === "dark"
-                                            ? "/icons/sun.svg"
-                                            : "/icons/moon.svg"
-                                    }
-                                    alt=""
-                                />
-                            </button>
-                        </div>
-                    </header>
-
-                    <div className="tasks-surface">
-                        <button
-                            className="fab"
-                            type="button"
-                            onClick={() => setIsAddOpen(true)}
-                        >
-                            <img
-                                className="icon-img"
-                                src="/icons/plus.svg"
-                                alt=""
-                            />
-                        </button>
-
-                        <section className="list-area">
-                            {loading ? (
-                                <div style={{ padding: 16 }}>Loading...</div>
-                            ) : (
-                                <TaskList
-                                    tasks={visibleTasks}
-                                    theme={theme}
-                                    onToggle={handleToggle}
-                                    onEdit={handleEdit}
-                                    onDelete={handleDelete}
-                                />
-                            )}
-                        </section>
-                    </div>
+                    <TasksSurface
+                        loading={loading}
+                        theme={theme}
+                        tasks={visibleTasks}
+                        onToggle={toggleCompleted}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onOpenAdd={() => setIsAddOpen(true)}
+                    />
                 </main>
             </div>
-            <Modal
-                isOpen={isAddOpen}
-                title="ADD TODO"
-                value={newTitle}
-                onChange={setNewTitle}
-                onClose={() => setIsAddOpen(false)}
-                onApply={submitAdd}
-            />
 
-            <Modal
-                isOpen={isEditOpen}
-                title="EDIT TODO"
-                value={editTitle}
-                onChange={setEditTitle}
-                onClose={() => setIsEditOpen(false)}
-                onApply={submitEdit}
-                isApplyDisabled={
-                    editTitle.trim() === "" ||
-                    editTitle.trim() === editInitialTitle.trim()
-                }
-            />
-
-            <ErrorModal
-                isOpen={isErrorOpen}
-                message="Слишком мало символов в вашем инпуте"
-                onClose={() => setIsErrorOpen(false)}
+            <TaskModals
+                isAddOpen={isAddOpen}
+                newTitle={newTitle}
+                onChangeNewTitle={setNewTitle}
+                onCloseAdd={() => setIsAddOpen(false)}
+                onApplyAdd={submitAdd}
+                isEditOpen={isEditOpen}
+                editTitle={editTitle}
+                onChangeEditTitle={setEditTitle}
+                onCloseEdit={closeEdit}
+                onApplyEdit={submitEdit}
+                isEditApplyDisabled={isEditApplyDisabled}
+                isErrorOpen={isErrorOpen}
+                errorMessage="Слишком мало символов в вашем инпуте"
+                onCloseError={() => setIsErrorOpen(false)}
             />
 
             <UndoDeleteStack

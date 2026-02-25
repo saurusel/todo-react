@@ -147,7 +147,7 @@ export function App() {
                 result = tasks;
         }
 
-        const q = (searchQuery ?? "").trim().toLowerCase();
+        const q = searchQuery.trim().toLowerCase();
         if (q) {
             result = result.filter((t) => t.title.toLowerCase().includes(q));
         }
@@ -377,7 +377,7 @@ export function App() {
                 const cur = prev.find((p) => p.taskId === "delete-all");
                 if (!cur) return prev;
 
-                const nextSeconds = Math.max(0, (cur.secondsLeft || 0) - 1);
+                const nextSeconds = Math.max(0, cur.secondsLeft - 1);
 
                 if (nextSeconds <= 0) {
                     const timer = timersRef.current.get("delete-all");
@@ -517,7 +517,7 @@ export function App() {
                                     setIsSortOpen(false);
                                 }}
                             />
-                            
+
                             <button
                                 ref={deleteAllBtnRef}
                                 className="delete-all-btn"

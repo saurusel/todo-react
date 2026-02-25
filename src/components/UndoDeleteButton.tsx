@@ -13,7 +13,7 @@ type Props = {
 };
 
 export function UndoDeleteButton({ pending, onUndo }: Props) {
-    const seconds = Math.max(0, pending.secondsLeft || 0);
+    const seconds = Math.max(0, pending.secondsLeft);
     const elapsed = 5 - seconds;
 
     const ringStyle: CSSProperties = {

@@ -6,7 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "cross-env APP_LOGS=1 webpack serve --config webpack/webpack.dev.js",
     "build": "cross-env APP_LOGS=0 webpack --config webpack/webpack.prod.js",
-    "preview": "npx serve dist -l 8081",
+    "preview": "npx serve -s dist -l 8081",
     "start:logs": "cross-env APP_LOGS=1 webpack serve --config webpack/webpack.dev.js",
     "start:no-logs": "cross-env APP_LOGS=0 webpack serve --config webpack/webpack.dev.js"
   },
@@ -26,7 +26,8 @@
     "axios": "^1.13.5",
     "miragejs": "^0.1.48",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.13.1"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",

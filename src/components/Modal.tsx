@@ -55,6 +55,7 @@ export function Modal({
                         className="modal-btn modal-btn--primary"
                         type="button"
                         onClick={onApply}
+                        disabled={isApplyDisabled}
                     >
                         APPLY
                     </button>

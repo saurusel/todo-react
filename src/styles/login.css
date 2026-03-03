@@ -1,7 +1,3 @@
-.page.page--auth {
-    padding-left: 0;
-}
-
 .login-surface {
     display: grid;
     place-items: center;

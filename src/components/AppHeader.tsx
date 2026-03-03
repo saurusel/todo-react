@@ -2,6 +2,8 @@ import { RefObject } from "react";
 import { Theme } from "../app/theme";
 import { FilterMode, SortMode } from "../app/taskView";
 import { Select } from "./Select";
+import { InlineSvg } from "./InlineSvg";
+import { ICON_SEARCH } from "../shared/assets/icons";
 
 type Option<T extends string> = { value: T; label: string };
 
@@ -70,13 +72,9 @@ export function AppHeader({
                         value={searchInput}
                         onChange={(e) => onChangeSearch(e.target.value)}
                     />
-                    <button className="input-icon-btn" type="button">
-                        <img
-                            className="icon-img"
-                            src="/icons/search.svg"
-                            alt=""
-                        />
-                    </button>
+                    <span className="input-icon">
+                        <InlineSvg className="icon-img" svg={ICON_SEARCH} />
+                    </span>
                 </div>
 
                 <Select

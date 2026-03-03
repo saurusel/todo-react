@@ -4,6 +4,8 @@ import { TODOS_ROUTE } from "../../shared/constants/routes";
 import { useAppDispatch } from "../../store/hooks";
 import { loginSuccess } from "../../store/authSlice";
 import { login as loginApi } from "../../api/auth";
+import { InlineSvg } from "../../components/InlineSvg";
+import { ICON_EYE, ICON_EYE_OFF } from "../../shared/assets/icons";
 
 function generatePassword() {
     const letters = "abcdefghijklmnopqrstuvwxyz";
@@ -22,6 +24,10 @@ function isValidPassword(p: string) {
     return /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(p);
 }
 
+function isValidEmail(v: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+}
+
 export function LoginPage() {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
@@ -32,23 +38,24 @@ export function LoginPage() {
     const [agreed, setAgreed] = useState(false);
 
     const passOk = useMemo(() => isValidPassword(password), [password]);
-    const canSubmit = agreed && login.trim().length > 0 && passOk;
+    const loginOk = useMemo(() => isValidEmail(login), [login]);
+    const canSubmit = agreed && loginOk && passOk;
 
     const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!canSubmit) return;
+        e.preventDefault();
+        if (!canSubmit) return;
 
-    try {
-        await loginApi(login.trim(), password); 
-        dispatch(loginSuccess());               
-        navigate(TODOS_ROUTE, { replace: true });
-    } catch (err) {
-        if (process.env.APP_LOGS === "1") console.error(err);
-    }
-};
+        try {
+            await loginApi(login.trim(), password);
+            dispatch(loginSuccess());
+            navigate(TODOS_ROUTE, { replace: true });
+        } catch (err) {
+            if (process.env.APP_LOGS === "1") console.error(err);
+        }
+    };
 
     return (
-        <div className="page page--auth">
+        <div className="page">
             <div className="container">
                 <main className="app">
                     <section className="login-surface">
@@ -59,6 +66,7 @@ export function LoginPage() {
                                     <input
                                         className="input"
                                         type="text"
+                                        name="login"
                                         value={login}
                                         onChange={(e) =>
                                             setLogin(e.target.value)
@@ -67,6 +75,12 @@ export function LoginPage() {
                                         autoComplete="off"
                                     />
                                 </div>
+
+                                {!loginOk && login.trim().length > 0 && (
+                                    <div className="login-hint login-hint--error">
+                                        Enter valid email
+                                    </div>
+                                )}
                             </div>
 
                             <div className="login-field">
@@ -81,6 +95,7 @@ export function LoginPage() {
                                                     ? "text"
                                                     : "password"
                                             }
+                                            name="password"
                                             value={password}
                                             onChange={(e) =>
                                                 setPassword(e.target.value)
@@ -88,6 +103,7 @@ export function LoginPage() {
                                             placeholder="Enter password"
                                             autoComplete="off"
                                         />
+
                                         <button
                                             className="input-icon-btn"
                                             type="button"
@@ -95,14 +111,13 @@ export function LoginPage() {
                                                 setShowPassword((v) => !v)
                                             }
                                         >
-                                            <img
+                                            <InlineSvg
                                                 className="icon-img"
-                                                src={
+                                                svg={
                                                     showPassword
-                                                        ? "/icons/eye-off.svg"
-                                                        : "/icons/eye.svg"
+                                                        ? ICON_EYE_OFF
+                                                        : ICON_EYE
                                                 }
-                                                alt=""
                                             />
                                         </button>
                                     </div>
@@ -117,9 +132,12 @@ export function LoginPage() {
                                         generate
                                     </button>
                                 </div>
-
                                 <div
-                                    className={`login-hint${passOk || password.length === 0 ? "" : " login-hint--error"}`}
+                                    className={`login-hint${
+                                        passOk || password.length === 0
+                                            ? ""
+                                            : " login-hint--error"
+                                    }`}
                                 >
                                     Min 8 chars, letters + digits
                                 </div>
@@ -129,6 +147,7 @@ export function LoginPage() {
                                 <input
                                     className="checkbox-input"
                                     type="checkbox"
+                                    name="agreed"
                                     checked={agreed}
                                     onChange={(e) =>
                                         setAgreed(e.target.checked)

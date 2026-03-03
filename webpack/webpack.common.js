@@ -31,6 +31,11 @@ module.exports = {
                 test: /\.css$/i,
                 use: ["style-loader", "css-loader"],
             },
+            {
+                test: /\.svg$/i,
+                resourceQuery: /raw/,
+                type: "asset/source",
+            },
         ],
     },
     plugins: [
@@ -50,8 +55,8 @@ module.exports = {
                     to: "icons",
                 },
                 {
-                    from: path.resolve(__dirname, "../public/photos"),
-                    to: "photos",
+                    from: path.resolve(__dirname, "../public/images"),
+                    to: "images",
                 },
             ],
         }),

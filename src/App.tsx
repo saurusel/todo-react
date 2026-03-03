@@ -65,6 +65,8 @@ export function App() {
     const [editInitialTitle, setEditInitialTitle] = useState("");
     const [enteringTaskId, setEnteringTaskId] = useState<number | null>(null);
     const enterTimerRef = useRef<number | null>(null);
+    const [isAddSubmitting, setIsAddSubmitting] = useState(false);
+    const [isEditSubmitting, setIsEditSubmitting] = useState(false);
 
     const handleEdit = (id: number) => {
         const task = tasks.find((t) => t.id === id);
@@ -84,15 +86,20 @@ export function App() {
     };
 
     const submitAdd = () => {
+        if (isAddSubmitting) return;
+
         const title = newTitle.trim();
         if (!title) {
             setIsErrorOpen(true);
             return;
         }
 
+        setIsAddSubmitting(true);
+
         addTask(title)
             .then((created) => {
                 bumpAdded(1);
+
                 if (enterTimerRef.current !== null) {
                     window.clearTimeout(enterTimerRef.current);
                 }
@@ -104,10 +111,12 @@ export function App() {
                 setNewTitle("");
                 setIsAddOpen(false);
             })
-            .catch(console.error);
+            .catch(console.error)
+            .finally(() => setIsAddSubmitting(false));
     };
 
     const submitEdit = () => {
+        if (isEditSubmitting) return;
         if (editingId === null) return;
 
         const nextTitle = editTitle.trim();
@@ -120,16 +129,21 @@ export function App() {
 
         if (nextTitle === prevTitle.trim()) return;
 
+        setIsEditSubmitting(true);
+
         updateTitle(editingId, nextTitle, prevTitle)
             .then(() => closeEdit())
-            .catch(() => {});
+            .catch(() => {})
+            .finally(() => setIsEditSubmitting(false));
     };
 
+    const isAddApplyDisabled = isAddSubmitting;
+
     const isEditApplyDisabled =
-        editTitle.trim() === "" || editTitle.trim() === editInitialTitle.trim();
+        editTitle.trim() === editInitialTitle.trim() || isEditSubmitting;
 
     return (
-        <div className="page">
+        <div className="page page--with-sidebar">
             <StatsPanel
                 currentCount={tasks.length}
                 deletedAllTime={stats.deletedAllTime}
@@ -188,6 +202,7 @@ export function App() {
                 onChangeNewTitle={setNewTitle}
                 onCloseAdd={() => setIsAddOpen(false)}
                 onApplyAdd={submitAdd}
+                isAddApplyDisabled={isAddApplyDisabled}
                 isEditOpen={isEditOpen}
                 editTitle={editTitle}
                 onChangeEditTitle={setEditTitle}

@@ -21,8 +21,8 @@ export function TaskList({
     if (!tasks.length) {
         const emptySrc =
             theme === "dark"
-                ? "/photos/empty-dark.svg"
-                : "/photos/empty-light.svg";
+                ? "/images/empty-dark.png"
+                : "/images/empty-light.png";
 
         return (
             <div className="empty-state">

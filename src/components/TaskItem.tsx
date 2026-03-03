@@ -1,3 +1,5 @@
+import { InlineSvg } from "./InlineSvg";
+import { ICON_EDIT, ICON_TRASH } from "../shared/assets/icons";
 import { Task } from "../types/task";
 
 type Props = {
@@ -33,7 +35,7 @@ export function TaskItem({ task, isEntering, onToggle, onEdit, onDelete }: Props
                     type="button"
                     onClick={() => onEdit?.(task.id)}
                 >
-                    <img className="icon-img" src="/icons/edit.svg" alt="" />
+                    <InlineSvg className="icon-img" svg={ICON_EDIT} />
                 </button>
 
                 <button
@@ -41,7 +43,7 @@ export function TaskItem({ task, isEntering, onToggle, onEdit, onDelete }: Props
                     type="button"
                     onClick={() => onDelete?.(task.id)}
                 >
-                    <img className="icon-img" src="/icons/trash.svg" alt="" />
+                    <InlineSvg className="icon-img" svg={ICON_TRASH} />
                 </button>
             </div>
         </li>

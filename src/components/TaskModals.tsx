@@ -7,6 +7,7 @@ type Props = {
     onChangeNewTitle(value: string): void;
     onCloseAdd(): void;
     onApplyAdd(): void;
+    isAddApplyDisabled: boolean;
 
     isEditOpen: boolean;
     editTitle: string;
@@ -26,6 +27,7 @@ export function TaskModals({
     onChangeNewTitle,
     onCloseAdd,
     onApplyAdd,
+    isAddApplyDisabled,
 
     isEditOpen,
     editTitle,
@@ -47,6 +49,7 @@ export function TaskModals({
                 onChange={onChangeNewTitle}
                 onClose={onCloseAdd}
                 onApply={onApplyAdd}
+                isApplyDisabled={isAddApplyDisabled}
             />
 
             <Modal

@@ -6,6 +6,7 @@ import { loginSuccess } from "../../store/authSlice";
 import { login as loginApi } from "../../api/auth";
 import { InlineSvg } from "../../components/InlineSvg";
 import { ICON_EYE, ICON_EYE_OFF } from "../../shared/assets/icons";
+import "./LoginPage.css";
 
 function generatePassword() {
     const letters = "abcdefghijklmnopqrstuvwxyz";

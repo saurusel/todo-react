@@ -33,7 +33,9 @@ const router = createBrowserRouter(
         },
     ],
     {
-        future: { v7_relativeSplatPath: true },
+        future: {
+            v7_relativeSplatPath: true,
+            },
     },
 );
 

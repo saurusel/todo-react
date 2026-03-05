@@ -20,13 +20,13 @@ export function useTodoStats(params: {
         if (hasKeyRef.current) return;
 
         const init: TodoStats = {
-            addedAllTime: currentCount,
+            addedAllTime: 0,
             deletedAllTime: 0,
         };
         setStats(init);
         saveStatsToLS(init);
         hasKeyRef.current = true;
-    }, [isReady, currentCount]);
+    }, [isReady]);
 
     const bumpAdded = (delta: number) => {
         setStats((prev) => {

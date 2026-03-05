@@ -1,4 +1,4 @@
-import { Modal } from "./Modal";
+import { Modal } from "./Modal/Modal";
 import { ErrorModal } from "./ErrorModal";
 
 type Props = {

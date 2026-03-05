@@ -13,8 +13,8 @@ import { useDebouncedState } from "./hooks/useDebouncedState";
 import { useTasks } from "./hooks/useTasks";
 import { useDeleteQueue } from "./hooks/useDeleteQueue";
 
-import { UndoDeleteStack } from "./components/UndoDeleteStack";
-import { AppHeader } from "./components/AppHeader";
+import { UndoDeleteStack } from "./components/UndoDeleteStack/UndoDeleteStack";
+import { AppHeader } from "./components/AppHeader/AppHeader";
 import { TasksSurface } from "./components/TasksSurface";
 import { TaskModals } from "./components/TaskModals";
 import { StatsPanel } from "./components/StatsPanel";

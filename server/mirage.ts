@@ -1,9 +1,10 @@
 import { createServer, Response } from "miragejs";
-import db from "./db.json";
+import dbJson from "./db.json";
 import {
     ACCESS_TOKEN_COOKIE,
     ACCESS_TOKEN_VALUE,
 } from "../src/shared/constants/auth";
+import { Task } from "../src/types/task";
 
 const logsEnabled = process.env.APP_LOGS === "1";
 
@@ -11,13 +12,7 @@ function mlog(...args: unknown[]) {
     if (logsEnabled) console.log("[mirage]", ...args);
 }
 
-type Task = {
-    id: number;
-    title: string;
-    completed: boolean;
-};
-
-const TASKS_STORAGE_KEY = "todo_tasks";
+type DbShape = { tasks: Task[] };
 
 function setAccessTokenCookie() {
     document.cookie = `${ACCESS_TOKEN_COOKIE}=${encodeURIComponent(
@@ -41,28 +36,17 @@ function requireAuth(request: { requestHeaders: Record<string, string> }) {
     return null;
 }
 
-function loadTasks(): Task[] {
-    const raw = localStorage.getItem(TASKS_STORAGE_KEY);
-    if (!raw) return (db as any).tasks as Task[];
-
-    try {
-        return JSON.parse(raw) as Task[];
-    } catch {
-        return (db as any).tasks as Task[];
-    }
-}
-
-function saveTasks(tasks: Task[]) {
-    localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
-}
-
 export function makeServer() {
     mlog("starting server");
 
-    let tasks: Task[] = loadTasks();
-    mlog("tasks loaded:", tasks.length);
+    const initialData: DbShape = dbJson;
 
     return createServer({
+        seeds(server) {
+            server.db.loadData(initialData);
+            mlog("tasks seeded:", server.db.tasks.length);
+        },
+
         routes() {
             this.namespace = "api";
 
@@ -77,7 +61,8 @@ export function makeServer() {
                 mlog("GET /api/tasks");
                 const authErr = requireAuth(request);
                 if (authErr) return authErr;
-                return { tasks };
+
+                return { tasks: schema.db.tasks };
             });
 
             // CREATE
@@ -86,16 +71,17 @@ export function makeServer() {
                 const authErr = requireAuth(request);
                 if (authErr) return authErr;
 
-                const body = JSON.parse(request.requestBody);
+                const body = JSON.parse(request.requestBody) as {
+                    title: string;
+                };
+
                 const newTask: Task = {
                     id: Date.now(),
                     title: body.title,
                     completed: false,
                 };
 
-                tasks = [newTask, ...tasks];
-                saveTasks(tasks);
-
+                schema.db.tasks.insert(newTask);
                 return { task: newTask };
             });
 
@@ -106,14 +92,12 @@ export function makeServer() {
 
                 const id = Number(request.params.id);
                 mlog("PATCH /api/tasks/" + id, request.requestBody);
-                const patch = JSON.parse(request.requestBody);
 
-                tasks = tasks.map((t) =>
-                    t.id === id ? { ...t, ...patch } : t,
-                );
-                saveTasks(tasks);
+                const patch = JSON.parse(request.requestBody) as Partial<
+                    Pick<Task, "title" | "completed">
+                >;
 
-                const updated = tasks.find((t) => t.id === id);
+                const updated = schema.db.tasks.update(id, patch);
                 return { task: updated };
             });
 
@@ -125,9 +109,7 @@ export function makeServer() {
                 const id = Number(request.params.id);
                 mlog("DELETE /api/tasks/" + id);
 
-                tasks = tasks.filter((t) => t.id !== id);
-                saveTasks(tasks);
-
+                schema.db.tasks.remove(id);
                 return new Response(204);
             });
         },

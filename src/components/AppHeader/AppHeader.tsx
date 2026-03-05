@@ -1,9 +1,10 @@
 import { RefObject } from "react";
-import { Theme } from "../app/theme";
-import { FilterMode, SortMode } from "../app/taskView";
-import { Select } from "./Select";
-import { InlineSvg } from "./InlineSvg";
-import { ICON_SEARCH } from "../shared/assets/icons";
+import { Theme } from "../../app/theme";
+import { FilterMode, SortMode } from "../../app/taskView";
+import { Select } from "../Select";
+import { InlineSvg } from "../InlineSvg";
+import { ICON_SEARCH } from "../../shared/assets/icons";
+import "./AppHeader.css";
 
 type Option<T extends string> = { value: T; label: string };
 

@@ -1,5 +1,6 @@
-import { UndoDeleteButton } from "./UndoDeleteButton";
-import { DeleteQueueId, DeleteQueueCountdown } from "../types/deleteQueue";
+import { UndoDeleteButton } from "../UndoDeleteButton";
+import { DeleteQueueId, DeleteQueueCountdown } from "../../types/deleteQueue";
+import "./UndoDeleteStack.css";
 
 type Props = {
     DeleteQueueItems: DeleteQueueCountdown[];

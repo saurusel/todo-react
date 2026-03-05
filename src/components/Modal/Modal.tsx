@@ -1,4 +1,5 @@
 import { ReactNode, KeyboardEvent, MouseEvent, useEffect } from "react";
+import "./Modal.css";
 
 type Props = {
     isOpen: boolean;

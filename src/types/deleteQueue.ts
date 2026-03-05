@@ -1,8 +1,8 @@
 import { Task } from "./task";
 
-export type PendingId = number | "delete-all";
+export type DeleteQueueId = number | "delete-all";
 
-export type PendingSingleDelete = {
+export type DeleteQueueSingle = {
     taskId: number;
     secondsLeft: number;
 
@@ -12,7 +12,7 @@ export type PendingSingleDelete = {
     afterId: number | null;
 };
 
-export type PendingDeleteAll = {
+export type DeleteQueueAll = {
     taskId: "delete-all";
     secondsLeft: number;
 
@@ -20,9 +20,9 @@ export type PendingDeleteAll = {
     tasksSnapshot: Task[];
 };
 
-export type PendingDelete = PendingSingleDelete | PendingDeleteAll;
+export type DeleteQueueItem = DeleteQueueSingle | DeleteQueueAll;
 
-export type PendingDeleteCountdown = {
-    taskId: PendingId;
+export type DeleteQueueCountdown = {
+    taskId: DeleteQueueId;
     secondsLeft: number;
 };

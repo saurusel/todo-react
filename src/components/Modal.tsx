@@ -1,4 +1,4 @@
-import { ReactNode, KeyboardEvent, MouseEvent } from "react";
+import { ReactNode, KeyboardEvent, MouseEvent, useEffect } from "react";
 
 type Props = {
     isOpen: boolean;
@@ -19,6 +19,17 @@ export function Modal({
     onApply,
     isApplyDisabled = false,
 }: Props) {
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+
+        return () => {
+            document.body.style.overflow = prevOverflow;
+        };
+    }, [isOpen]);
+
     if (!isOpen) return null;
 
     const stop = (e: MouseEvent<HTMLDivElement>) => e.stopPropagation();

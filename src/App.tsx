@@ -11,7 +11,7 @@ import {
 import { useThemeState } from "./hooks/useThemeState";
 import { useDebouncedState } from "./hooks/useDebouncedState";
 import { useTasks } from "./hooks/useTasks";
-import { usePendingDeletes } from "./hooks/usePendingDeletes";
+import { useDeleteQueue } from "./hooks/useDeleteQueue";
 
 import { UndoDeleteStack } from "./components/UndoDeleteStack";
 import { AppHeader } from "./components/AppHeader";
@@ -44,12 +44,12 @@ export function App() {
     const [isSortOpen, setIsSortOpen] = useState(false);
 
     const {
-        pendingDeletes,
-        undoPendingDelete,
+        deleteQueueItems,
+        undoDeleteQueueItem,
         handleDelete,
         handleDeleteAll,
         deleteAllBtnRef,
-    } = usePendingDeletes({ tasks, setTasks, onDeletedConfirmed: bumpDeleted });
+    } = useDeleteQueue({ tasks, setTasks, onDeletedConfirmed: bumpDeleted });
 
     const visibleTasks = useMemo(() => {
         return getVisibleTasks({ tasks, filterMode, sortMode, searchQuery });
@@ -145,6 +145,7 @@ export function App() {
     return (
         <div className="page page--with-sidebar">
             <StatsPanel
+                loading={loading}
                 currentCount={tasks.length}
                 deletedAllTime={stats.deletedAllTime}
                 addedAllTime={stats.addedAllTime}
@@ -215,8 +216,8 @@ export function App() {
             />
 
             <UndoDeleteStack
-                pendingDeletes={pendingDeletes}
-                onUndo={undoPendingDelete}
+                DeleteQueueItems={deleteQueueItems}
+                onUndo={undoDeleteQueueItem}
             />
         </div>
     );

@@ -4,7 +4,9 @@
 
 .list-area {
     width: min(520px, 100%);
-    margin: 30px auto 0 auto;
+    margin: 0 auto;
+    padding-top: 30px;
+    box-sizing: border-box;
     position: relative;
     height: 100%;
 }

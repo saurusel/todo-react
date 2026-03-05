@@ -1,17 +1,17 @@
 import { UndoDeleteButton } from "./UndoDeleteButton";
-import { PendingId, PendingDeleteCountdown } from "../types/pendingDelete";
+import { DeleteQueueId, DeleteQueueCountdown } from "../types/deleteQueue";
 
 type Props = {
-    pendingDeletes: PendingDeleteCountdown[];
-    onUndo(taskId: PendingId): void;
+    DeleteQueueItems: DeleteQueueCountdown[];
+    onUndo(taskId: DeleteQueueId): void;
 };
 
-export function UndoDeleteStack({ pendingDeletes, onUndo }: Props) {
-    if (!pendingDeletes.length) return null;
+export function UndoDeleteStack({ DeleteQueueItems, onUndo }: Props) {
+    if (!DeleteQueueItems.length) return null;
 
     return (
         <div className="undo-delete-stack">
-            {pendingDeletes.map((p) => (
+            {DeleteQueueItems.map((p) => (
                 <UndoDeleteButton key={p.taskId} pending={p} onUndo={onUndo} />
             ))}
         </div>

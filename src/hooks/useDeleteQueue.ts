@@ -2,34 +2,36 @@ import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { deleteTask } from "../api/tasks";
 import { Task } from "../types/task";
 import {
-    PendingDelete,
-    PendingDeleteAll,
-    PendingId,
-    PendingSingleDelete,
-} from "../types/pendingDelete";
+    DeleteQueueItem,
+    DeleteQueueAll,
+    DeleteQueueId,
+    DeleteQueueSingle,
+} from "../types/deleteQueue";
 
-export function usePendingDeletes(params: {
+export function useDeleteQueue(params: {
     tasks: Task[];
     setTasks: Dispatch<SetStateAction<Task[]>>;
     onDeletedConfirmed?: (count: number) => void;
 }) {
     const { tasks, setTasks, onDeletedConfirmed } = params;
 
-    const [pendingDeletes, setPendingDeletes] = useState<PendingDelete[]>([]);
-    const pendingRef = useRef<PendingDelete[]>([]);
+    const [deleteQueueItems, setDeleteQueueItems] = useState<DeleteQueueItem[]>(
+        [],
+    );
+    const pendingRef = useRef<DeleteQueueItem[]>([]);
 
     useEffect(() => {
-        pendingRef.current = pendingDeletes;
-    }, [pendingDeletes]);
+        pendingRef.current = deleteQueueItems;
+    }, [deleteQueueItems]);
 
     const timersRef = useRef(
         new Map<
-            PendingId,
+            DeleteQueueId,
             { timeoutId: number | null; intervalId: number | null }
         >(),
     );
 
-    const clearTimersFor = (taskId: PendingId) => {
+    const clearTimersFor = (taskId: DeleteQueueId) => {
         const t = timersRef.current.get(taskId);
         if (!t) return;
 
@@ -60,7 +62,7 @@ export function usePendingDeletes(params: {
         }, 400);
     };
 
-    const restoreTask = (pending: PendingSingleDelete) => {
+    const restoreTask = (pending: DeleteQueueSingle) => {
         setTasks((prev) => {
             const beforePos =
                 pending.beforeId !== null
@@ -95,12 +97,12 @@ export function usePendingDeletes(params: {
         });
     };
 
-    const confirmPendingDelete = (taskId: PendingId) => {
+    const confirmDeleteQueueItem = (taskId: DeleteQueueId) => {
         const pending = pendingRef.current.find((p) => p.taskId === taskId);
         if (!pending) return;
 
         clearTimersFor(taskId);
-        setPendingDeletes((prev) => prev.filter((p) => p.taskId !== taskId));
+        setDeleteQueueItems((prev) => prev.filter((p) => p.taskId !== taskId));
 
         if (pending.taskId === "delete-all") {
             const snapshot = pending.tasksSnapshot;
@@ -128,12 +130,12 @@ export function usePendingDeletes(params: {
             });
     };
 
-    const undoPendingDelete = (taskId: PendingId) => {
+    const undoDeleteQueueItem = (taskId: DeleteQueueId) => {
         const pending = pendingRef.current.find((p) => p.taskId === taskId);
         if (!pending) return;
 
         clearTimersFor(taskId);
-        setPendingDeletes((prev) => prev.filter((p) => p.taskId !== taskId));
+        setDeleteQueueItems((prev) => prev.filter((p) => p.taskId !== taskId));
 
         if (pending.taskId === "delete-all") {
             setTasks((prev) => [...prev, ...pending.tasksSnapshot]);
@@ -155,7 +157,7 @@ export function usePendingDeletes(params: {
 
         setTasks((prev) => prev.filter((t) => t.id !== id));
 
-        const pending: PendingSingleDelete = {
+        const pending: DeleteQueueSingle = {
             taskId: id,
             task,
             index,
@@ -164,10 +166,10 @@ export function usePendingDeletes(params: {
             secondsLeft: 5,
         };
 
-        setPendingDeletes((prev) => [...prev, pending]);
+        setDeleteQueueItems((prev) => [...prev, pending]);
 
         const intervalId = window.setInterval(() => {
-            setPendingDeletes((prev) => {
+            setDeleteQueueItems((prev) => {
                 const cur = prev.find((p) => p.taskId === id);
                 if (!cur) return prev;
 
@@ -188,7 +190,7 @@ export function usePendingDeletes(params: {
         }, 1000);
 
         const timeoutId = window.setTimeout(() => {
-            confirmPendingDelete(id);
+            confirmDeleteQueueItem(id);
         }, 5000);
 
         timersRef.current.set(id, { intervalId, timeoutId });
@@ -203,17 +205,17 @@ export function usePendingDeletes(params: {
         const snapshot = [...tasks];
         setTasks([]);
 
-        const pending: PendingDeleteAll = {
+        const pending: DeleteQueueAll = {
             taskId: "delete-all",
             isDeleteAll: true,
             tasksSnapshot: snapshot,
             secondsLeft: 5,
         };
 
-        setPendingDeletes([pending]);
+        setDeleteQueueItems([pending]);
 
         const intervalId = window.setInterval(() => {
-            setPendingDeletes((prev) => {
+            setDeleteQueueItems((prev) => {
                 const cur = prev.find((p) => p.taskId === "delete-all");
                 if (!cur) return prev;
 
@@ -236,15 +238,15 @@ export function usePendingDeletes(params: {
         }, 1000);
 
         const timeoutId = window.setTimeout(() => {
-            confirmPendingDelete("delete-all");
+            confirmDeleteQueueItem("delete-all");
         }, 5000);
 
         timersRef.current.set("delete-all", { intervalId, timeoutId });
     };
 
     return {
-        pendingDeletes,
-        undoPendingDelete,
+        deleteQueueItems,
+        undoDeleteQueueItem,
         handleDelete,
         handleDeleteAll,
         deleteAllBtnRef,

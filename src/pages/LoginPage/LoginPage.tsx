@@ -36,14 +36,19 @@ export function LoginPage() {
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [agreed, setAgreed] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const passOk = useMemo(() => isValidPassword(password), [password]);
     const loginOk = useMemo(() => isValidEmail(login), [login]);
-    const canSubmit = agreed && loginOk && passOk;
+    const canSubmit = agreed && loginOk && passOk && !isSubmitting;
 
     const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!canSubmit) return;
+
+        if (isSubmitting) return;
+        if (!agreed || !loginOk || !passOk) return;
+
+        setIsSubmitting(true);
 
         try {
             await loginApi(login.trim(), password);
@@ -51,6 +56,8 @@ export function LoginPage() {
             navigate(TODOS_ROUTE, { replace: true });
         } catch (err) {
             if (process.env.APP_LOGS === "1") console.error(err);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -58,118 +65,112 @@ export function LoginPage() {
         <div className="page">
             <div className="container">
                 <main className="app">
-                    <section className="login-surface">
-                        <form className="login-form" onSubmit={onSubmit}>
-                            <div className="login-field">
-                                <div className="login-label">Login</div>
-                                <div className="input-wrap">
+                    <form className="login-form" onSubmit={onSubmit}>
+                        <div className="login-field">
+                            <div className="login-label">Login</div>
+                            <div className="input-wrap">
+                                <input
+                                    className="input"
+                                    type="text"
+                                    name="login"
+                                    value={login}
+                                    onChange={(e) => setLogin(e.target.value)}
+                                    placeholder="Enter login"
+                                    autoComplete="off"
+                                />
+                            </div>
+
+                            {!loginOk && login.trim().length > 0 && (
+                                <div className="login-hint login-hint--error">
+                                    Enter valid email
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="login-field">
+                            <div className="login-label">Password</div>
+
+                            <div className="login-pass-row">
+                                <div className="input-wrap login-pass-input">
                                     <input
                                         className="input"
-                                        type="text"
-                                        name="login"
-                                        value={login}
-                                        onChange={(e) =>
-                                            setLogin(e.target.value)
+                                        type={
+                                            showPassword ? "text" : "password"
                                         }
-                                        placeholder="Enter login"
+                                        name="password"
+                                        value={password}
+                                        onChange={(e) =>
+                                            setPassword(e.target.value)
+                                        }
+                                        placeholder="Enter password"
                                         autoComplete="off"
                                     />
-                                </div>
-
-                                {!loginOk && login.trim().length > 0 && (
-                                    <div className="login-hint login-hint--error">
-                                        Enter valid email
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="login-field">
-                                <div className="login-label">Password</div>
-
-                                <div className="login-pass-row">
-                                    <div className="input-wrap login-pass-input">
-                                        <input
-                                            className="input"
-                                            type={
-                                                showPassword
-                                                    ? "text"
-                                                    : "password"
-                                            }
-                                            name="password"
-                                            value={password}
-                                            onChange={(e) =>
-                                                setPassword(e.target.value)
-                                            }
-                                            placeholder="Enter password"
-                                            autoComplete="off"
-                                        />
-
-                                        <button
-                                            className="input-icon-btn"
-                                            type="button"
-                                            onClick={() =>
-                                                setShowPassword((v) => !v)
-                                            }
-                                        >
-                                            <InlineSvg
-                                                className="icon-img"
-                                                svg={
-                                                    showPassword
-                                                        ? ICON_EYE_OFF
-                                                        : ICON_EYE
-                                                }
-                                            />
-                                        </button>
-                                    </div>
 
                                     <button
-                                        className="login-btn"
+                                        className="input-icon-btn"
                                         type="button"
                                         onClick={() =>
-                                            setPassword(generatePassword())
+                                            setShowPassword((v) => !v)
                                         }
                                     >
-                                        generate
+                                        <InlineSvg
+                                            className="icon-img"
+                                            svg={
+                                                showPassword
+                                                    ? ICON_EYE_OFF
+                                                    : ICON_EYE
+                                            }
+                                        />
                                     </button>
                                 </div>
-                                <div
-                                    className={`login-hint${
-                                        passOk || password.length === 0
-                                            ? ""
-                                            : " login-hint--error"
-                                    }`}
-                                >
-                                    Min 8 chars, letters + digits
-                                </div>
-                            </div>
 
-                            <label className="login-checkbox">
-                                <input
-                                    className="checkbox-input"
-                                    type="checkbox"
-                                    name="agreed"
-                                    checked={agreed}
-                                    onChange={(e) =>
-                                        setAgreed(e.target.checked)
+                                <button
+                                    className="login-btn"
+                                    type="button"
+                                    onClick={() =>
+                                        setPassword(generatePassword())
                                     }
-                                />
-                                <span className="checkbox-box">
-                                    <img src="/icons/check-mark.svg" alt="" />
-                                </span>
-                                <span className="login-checkbox-text">
-                                    I agree that ...
-                                </span>
-                            </label>
-
-                            <button
-                                className="login-submit"
-                                type="submit"
-                                disabled={!canSubmit}
+                                >
+                                    generate
+                                </button>
+                            </div>
+                            <div
+                                className={`login-hint${
+                                    passOk || password.length === 0
+                                        ? ""
+                                        : " login-hint--error"
+                                }`}
                             >
-                                login
-                            </button>
-                        </form>
-                    </section>
+                                Min 8 chars, letters + digits
+                            </div>
+                        </div>
+
+                        <label className="login-checkbox">
+                            <input
+                                className="checkbox-input"
+                                type="checkbox"
+                                name="agreed"
+                                checked={agreed}
+                                onChange={(e) => setAgreed(e.target.checked)}
+                            />
+                            <span className="checkbox-box">
+                                <img src="/icons/check-mark.svg" alt="" />
+                            </span>
+                            <span className="login-checkbox-text">
+                                я согласен, что я нахожусь на скоростной полосе
+                                Frontend, но чтобы вкатиться — я должен
+                                работать.
+                            </span>
+                        </label>
+
+                        <button
+                            className="login-submit"
+                            type="submit"
+                            disabled={!canSubmit}
+                        >
+                            {isSubmitting ? "loading..." : "login"}
+                        </button>
+                    </form>
                 </main>
             </div>
         </div>

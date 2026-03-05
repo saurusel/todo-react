@@ -1,46 +1,42 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { LOGIN_ROUTE, TODOS_ROUTE } from "../../shared/constants/routes";
-import { LoginPage } from "../../pages/LoginPage/LoginPage";
-import { TodosPage } from "../../pages/TodosPage/TodosPage";
-import { useAppSelector } from "../../store/hooks";
 import { ProtectedRoute } from "./ProtectedRoute";
+import { FallbackRedirect } from "./FallbackRedirect";
+
+const router = createBrowserRouter(
+    [
+        {
+            path: LOGIN_ROUTE,
+            async lazy() {
+                const m = await import("../../pages/LoginPage/LoginPage");
+                return { Component: m.LoginPage };
+            },
+        },
+
+        {
+            Component: ProtectedRoute,
+            children: [
+                {
+                    path: TODOS_ROUTE,
+                    async lazy() {
+                        const m =
+                            await import("../../pages/TodosPage/TodosPage");
+                        return { Component: m.TodosPage };
+                    },
+                },
+            ],
+        },
+
+        {
+            path: "*",
+            Component: FallbackRedirect,
+        },
+    ],
+    {
+        future: { v7_relativeSplatPath: true },
+    },
+);
 
 export function AppRouter() {
-    const isAuth = useAppSelector((s) => s.auth.isAuth);
-
-    return (
-        <BrowserRouter>
-            <Routes>
-                {isAuth ? (
-                    <>
-                        <Route
-                            path="/"
-                            element={<Navigate to={TODOS_ROUTE} replace />}
-                        />
-
-                        <Route element={<ProtectedRoute />}>
-                            <Route path={TODOS_ROUTE} element={<TodosPage />} />
-                        </Route>
-
-                        <Route
-                            path="*"
-                            element={<Navigate to={TODOS_ROUTE} replace />}
-                        />
-                    </>
-                ) : (
-                    <>
-                        <Route
-                            path="/"
-                            element={<Navigate to={LOGIN_ROUTE} replace />}
-                        />
-                        <Route path={LOGIN_ROUTE} element={<LoginPage />} />
-                        <Route
-                            path="*"
-                            element={<Navigate to={LOGIN_ROUTE} replace />}
-                        />
-                    </>
-                )}
-            </Routes>
-        </BrowserRouter>
-    );
+    return <RouterProvider router={router} />;
 }

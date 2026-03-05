@@ -1,9 +1,9 @@
 import { CSSProperties } from "react";
-import { PendingId, PendingDeleteCountdown } from "../types/pendingDelete";
+import { DeleteQueueId, DeleteQueueCountdown } from "../types/deleteQueue";
 
 type Props = {
-    pending: PendingDeleteCountdown;
-    onUndo(taskId: PendingId): void;
+    pending: DeleteQueueCountdown;
+    onUndo(taskId: DeleteQueueId): void;
 };
 
 export function UndoDeleteButton({ pending, onUndo }: Props) {

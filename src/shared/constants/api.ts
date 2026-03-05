@@ -1,0 +1,1 @@
+export const TASKS_RESOURCE = "/tasks";

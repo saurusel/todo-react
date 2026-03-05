@@ -4,17 +4,23 @@ import { ACCESS_TOKEN_COOKIE } from "../shared/constants/auth";
 
 export const http = axios.create({
     baseURL: "/api",
-    headers: { "Content-Type": "application/json" },
 });
 
 const logsEnabled = process.env.APP_LOGS === "1";
+
+let onUnauthorized: (() => void) | null = null;
+
+export const setUnauthorizedHandler = (handler: (() => void) | null) => {
+    onUnauthorized = handler;
+};
 
 http.interceptors.request.use((config) => {
     const token = getCookie(ACCESS_TOKEN_COOKIE);
 
     if (token) {
         config.headers = config.headers ?? {};
-        (config.headers as any)["Authorization"] = `Bearer ${token}`;
+        (config.headers as Record<string, string>)["Authorization"] =
+            `Bearer ${token}`;
     }
 
     if (logsEnabled) {
@@ -33,8 +39,13 @@ http.interceptors.response.use(
         return res;
     },
     (err) => {
+        const status = err?.response?.status;
+
+        if (status === 401) {
+            onUnauthorized?.();
+        }
+
         if (logsEnabled) {
-            const status = err?.response?.status;
             const url = err?.config?.url;
             const payload = err?.response?.data;
             console.error("[http ✖]", status, url, payload ?? err?.message);

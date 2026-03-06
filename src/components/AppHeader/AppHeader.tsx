@@ -1,6 +1,6 @@
 import { RefObject } from "react";
-import { Theme } from "../../app/theme";
-import { FilterMode, SortMode } from "../../app/taskView";
+import { Theme } from "../../shared/lib/theme";
+import { FilterMode, SortMode } from "../../shared/lib/taskView";
 import { Select, SelectOption } from "../Select";
 import { InlineSvg } from "../InlineSvg";
 import {

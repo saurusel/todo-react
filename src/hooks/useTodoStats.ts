@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import {
-    TodoStats,
-    hasStatsInLS,
-    loadStatsFromLS,
-    saveStatsToLS,
-} from "../storage/statsStorage";
+
+export type TodoStats = {
+    addedAllTime: number;
+    deletedAllTime: number;
+};
 
 export function useTodoStats(params: {
     currentCount: number;
@@ -12,39 +11,37 @@ export function useTodoStats(params: {
 }) {
     const { currentCount, isReady } = params;
 
-    const [stats, setStats] = useState<TodoStats>(() => loadStatsFromLS());
-    const hasKeyRef = useRef<boolean>(hasStatsInLS());
+    const [stats, setStats] = useState<TodoStats>({
+        addedAllTime: 0,
+        deletedAllTime: 0,
+    });
+
+    const initializedRef = useRef(false);
 
     useEffect(() => {
         if (!isReady) return;
-        if (hasKeyRef.current) return;
+        if (initializedRef.current) return;
 
-        const init: TodoStats = {
-            addedAllTime: 0,
+        setStats({
+            addedAllTime: currentCount,
             deletedAllTime: 0,
-        };
-        setStats(init);
-        saveStatsToLS(init);
-        hasKeyRef.current = true;
-    }, [isReady]);
+        });
+
+        initializedRef.current = true;
+    }, [currentCount, isReady]);
 
     const bumpAdded = (delta: number) => {
-        setStats((prev) => {
-            const next = { ...prev, addedAllTime: prev.addedAllTime + delta };
-            saveStatsToLS(next);
-            return next;
-        });
+        setStats((prev) => ({
+            ...prev,
+            addedAllTime: prev.addedAllTime + delta,
+        }));
     };
 
     const bumpDeleted = (delta: number) => {
-        setStats((prev) => {
-            const next = {
-                ...prev,
-                deletedAllTime: prev.deletedAllTime + delta,
-            };
-            saveStatsToLS(next);
-            return next;
-        });
+        setStats((prev) => ({
+            ...prev,
+            deletedAllTime: prev.deletedAllTime + delta,
+        }));
     };
 
     return { stats, bumpAdded, bumpDeleted };

@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { getCookie } from "../shared/lib/cookies";
 import { ACCESS_TOKEN_COOKIE } from "../shared/constants/auth";
 

@@ -26,13 +26,12 @@ npm run preview
 
 ## Mirage API
 
-* GET /api/ping -> { ok: true, message: "pong" }
 * GET /api/tasks -> { tasks: [...] }
 * POST /api/tasks -> { task: ... }
 * PATCH /api/tasks/:id -> { task: ... }
 * DELETE /api/tasks/:id -> 204 No Content
 
-## LocalStorage keys
-
-* todo_tasks — список задач (persist)
-* todo_theme — тема
+## Ненбольшое пояснение по проекту
+- `db.json` используется как начальный источник данных,
+- CRUD идёт через Mirage,
+- данные задач после reload возвращаются к состоянию из `db.json`.

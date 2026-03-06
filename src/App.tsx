@@ -6,7 +6,7 @@ import {
     FILTERS,
     SORTS,
     getVisibleTasks,
-} from "./app/taskView";
+} from "./shared/lib/taskView";
 
 import { useThemeState } from "./hooks/useThemeState";
 import { useDebouncedState } from "./hooks/useDebouncedState";
@@ -217,7 +217,7 @@ export function App() {
             />
 
             <UndoDeleteStack
-                DeleteQueueItems={deleteQueueItems}
+                deleteQueueItems={deleteQueueItems}
                 onUndo={undoDeleteQueueItem}
             />
         </div>

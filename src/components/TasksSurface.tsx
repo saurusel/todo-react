@@ -1,4 +1,4 @@
-import { Theme } from "../app/theme";
+import { Theme } from "../shared/lib/theme";
 import { Task } from "../types/task";
 import { TaskList } from "./TaskList";
 import { InlineSvg } from "./InlineSvg";

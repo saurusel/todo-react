@@ -1,5 +1,6 @@
 import { InlineSvg } from "./InlineSvg";
 import { ICON_COUNTDOWN, ICON_UNDO_ARROW } from "../shared/assets/icons";
+import { UNDO_DELETE_TTL_SECONDS } from "../shared/constants/timers";
 import { DeleteQueueId, DeleteQueueCountdown } from "../types/deleteQueue";
 
 type Props = {
@@ -7,13 +8,22 @@ type Props = {
     onUndo(taskId: DeleteQueueId): void;
 };
 
+import type { CSSProperties } from "react";
+
+type CssVars = CSSProperties & {
+    ["--undo-ttl"]?: number;
+};
+
 export function UndoDeleteButton({ pending, onUndo }: Props) {
     const seconds = Math.max(0, pending.secondsLeft);
+
+    const cssVars: CssVars = { "--undo-ttl": UNDO_DELETE_TTL_SECONDS };
 
     return (
         <button
             className="undo-delete"
             type="button"
+            style={cssVars}
             onClick={() => onUndo(pending.taskId)}
         >
             <span className="undo-delete-countdown">

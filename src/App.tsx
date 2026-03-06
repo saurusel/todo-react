@@ -64,7 +64,8 @@ export function App() {
     const [editTitle, setEditTitle] = useState("");
     const [editInitialTitle, setEditInitialTitle] = useState("");
     const [enteringTaskId, setEnteringTaskId] = useState<number | null>(null);
-    const enterTimerRef = useRef<number | null>(null);
+    type TimeoutId = ReturnType<typeof setTimeout>;
+    const enterTimerRef = useRef<TimeoutId | null>(null);
     const [isAddSubmitting, setIsAddSubmitting] = useState(false);
     const [isEditSubmitting, setIsEditSubmitting] = useState(false);
 
@@ -101,10 +102,10 @@ export function App() {
                 bumpAdded(1);
 
                 if (enterTimerRef.current !== null) {
-                    window.clearTimeout(enterTimerRef.current);
+                    clearTimeout(enterTimerRef.current);
                 }
                 setEnteringTaskId(created.id);
-                enterTimerRef.current = window.setTimeout(() => {
+                enterTimerRef.current = setTimeout(() => {
                     setEnteringTaskId(null);
                 }, 300);
 

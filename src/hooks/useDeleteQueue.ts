@@ -7,6 +7,7 @@ import {
     DeleteQueueId,
     DeleteQueueSingle,
 } from "../types/deleteQueue";
+import { UNDO_DELETE_TTL_SECONDS } from "../shared/constants/timers";
 
 export function useDeleteQueue(params: {
     tasks: Task[];
@@ -20,30 +21,37 @@ export function useDeleteQueue(params: {
     );
     const pendingRef = useRef<DeleteQueueItem[]>([]);
 
+    const SECOND_MS = 1000;
+    const UNDO_TTL_MS = UNDO_DELETE_TTL_SECONDS * SECOND_MS;
+
     useEffect(() => {
         pendingRef.current = deleteQueueItems;
     }, [deleteQueueItems]);
 
-    const timersRef = useRef(
-        new Map<
-            DeleteQueueId,
-            { timeoutId: number | null; intervalId: number | null }
-        >(),
-    );
+    type IntervalId = ReturnType<typeof setInterval>;
+    type TimeoutId = ReturnType<typeof setTimeout>;
+
+    type DeleteTimer = {
+        intervalId: IntervalId | null;
+        timeoutId: TimeoutId | null;
+    };
+
+    const timersRef = useRef<Map<DeleteQueueId, DeleteTimer>>(new Map());
 
     const clearTimersFor = (taskId: DeleteQueueId) => {
         const t = timersRef.current.get(taskId);
         if (!t) return;
 
-        if (t.timeoutId != null) window.clearTimeout(t.timeoutId);
-        if (t.intervalId != null) window.clearInterval(t.intervalId);
+        if (t.timeoutId != null) clearTimeout(t.timeoutId);
+        if (t.intervalId != null) clearInterval(t.intervalId);
 
         timersRef.current.delete(taskId);
     };
 
     useEffect(() => {
         return () => {
-            for (const [taskId] of timersRef.current) clearTimersFor(taskId);
+            for (const taskId of timersRef.current.keys())
+                clearTimersFor(taskId);
         };
     }, []);
 
@@ -57,7 +65,7 @@ export function useDeleteQueue(params: {
         void el.offsetWidth;
         el.classList.add("is-shaking");
 
-        window.setTimeout(() => {
+        setTimeout(() => {
             el.classList.remove("is-shaking");
         }, 400);
     };
@@ -120,10 +128,10 @@ export function useDeleteQueue(params: {
             return;
         }
 
-        deleteTask(taskId as number)
-            .then(() => {
-                onDeletedConfirmed?.(1);
-            })
+        if (typeof taskId !== "number") return;
+
+        deleteTask(taskId)
+            .then(() => onDeletedConfirmed?.(1))
             .catch((err) => {
                 console.error(err);
                 restoreTask(pending);
@@ -163,12 +171,12 @@ export function useDeleteQueue(params: {
             index,
             beforeId,
             afterId,
-            secondsLeft: 5,
+            secondsLeft: UNDO_DELETE_TTL_SECONDS,
         };
 
         setDeleteQueueItems((prev) => [...prev, pending]);
 
-        const intervalId = window.setInterval(() => {
+        const intervalId = setInterval(() => {
             setDeleteQueueItems((prev) => {
                 const cur = prev.find((p) => p.taskId === id);
                 if (!cur) return prev;
@@ -178,7 +186,7 @@ export function useDeleteQueue(params: {
                 if (nextSeconds <= 0) {
                     const timer = timersRef.current.get(id);
                     if (timer?.intervalId != null) {
-                        window.clearInterval(timer.intervalId);
+                        clearInterval(timer.intervalId);
                         timer.intervalId = null;
                     }
                 }
@@ -187,11 +195,11 @@ export function useDeleteQueue(params: {
                     p.taskId === id ? { ...p, secondsLeft: nextSeconds } : p,
                 );
             });
-        }, 1000);
+        }, SECOND_MS);
 
-        const timeoutId = window.setTimeout(() => {
+        const timeoutId = setTimeout(() => {
             confirmDeleteQueueItem(id);
-        }, 5000);
+        }, UNDO_TTL_MS);
 
         timersRef.current.set(id, { intervalId, timeoutId });
     };
@@ -209,12 +217,12 @@ export function useDeleteQueue(params: {
             taskId: "delete-all",
             isDeleteAll: true,
             tasksSnapshot: snapshot,
-            secondsLeft: 5,
+            secondsLeft: UNDO_DELETE_TTL_SECONDS,
         };
 
         setDeleteQueueItems([pending]);
 
-        const intervalId = window.setInterval(() => {
+        const intervalId = setInterval(() => {
             setDeleteQueueItems((prev) => {
                 const cur = prev.find((p) => p.taskId === "delete-all");
                 if (!cur) return prev;
@@ -224,7 +232,7 @@ export function useDeleteQueue(params: {
                 if (nextSeconds <= 0) {
                     const timer = timersRef.current.get("delete-all");
                     if (timer?.intervalId != null) {
-                        window.clearInterval(timer.intervalId);
+                        clearInterval(timer.intervalId);
                         timer.intervalId = null;
                     }
                 }
@@ -235,11 +243,11 @@ export function useDeleteQueue(params: {
                         : p,
                 );
             });
-        }, 1000);
+        }, SECOND_MS);
 
-        const timeoutId = window.setTimeout(() => {
+        const timeoutId = setTimeout(() => {
             confirmDeleteQueueItem("delete-all");
-        }, 5000);
+        }, UNDO_TTL_MS);
 
         timersRef.current.set("delete-all", { intervalId, timeoutId });
     };

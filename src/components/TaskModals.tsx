@@ -1,5 +1,5 @@
 import { Modal } from "./Modal/Modal";
-import { ErrorModal } from "./ErrorModal";
+import { ErrorModal } from "./Modal/ErrorModal";
 
 type Props = {
     isAddOpen: boolean;

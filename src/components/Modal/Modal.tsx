@@ -1,5 +1,4 @@
-import { ReactNode, KeyboardEvent, MouseEvent, useEffect } from "react";
-import "./Modal.css";
+import { BaseModal } from "./BaseModal";
 
 type Props = {
     isOpen: boolean;
@@ -20,59 +19,40 @@ export function Modal({
     onApply,
     isApplyDisabled = false,
 }: Props) {
-    useEffect(() => {
-        if (!isOpen) return;
-
-        const prevOverflow = document.body.style.overflow;
-        document.body.style.overflow = "hidden";
-
-        return () => {
-            document.body.style.overflow = prevOverflow;
-        };
-    }, [isOpen]);
-
-    if (!isOpen) return null;
-
-    const stop = (e: MouseEvent<HTMLDivElement>) => e.stopPropagation();
-
     return (
-        <div className="modal" onMouseDown={onClose}>
-            <div className="modal-overlay" />
+        <BaseModal isOpen={isOpen} onClose={onClose}>
+            <h1 className="modal-title">{title}</h1>
 
-            <div className="modal-window" onMouseDown={stop}>
-                <h1 className="modal-title">{title}</h1>
+            <input
+                className="modal-input"
+                type="text"
+                placeholder="Enter your note..."
+                value={value}
+                autoFocus
+                onChange={(e) => onChange(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter" && !isApplyDisabled) onApply();
+                }}
+            />
 
-                <input
-                    className="modal-input"
-                    type="text"
-                    placeholder="Input your note..."
-                    value={value}
-                    autoFocus
-                    onChange={(e) => onChange(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter" && !isApplyDisabled) onApply();
-                    }}
-                />
+            <div className="modal-actions">
+                <button
+                    className="modal-btn modal-btn--ghost"
+                    type="button"
+                    onClick={onClose}
+                >
+                    CANCEL
+                </button>
 
-                <div className="modal-actions">
-                    <button
-                        className="modal-btn modal-btn--ghost"
-                        type="button"
-                        onClick={onClose}
-                    >
-                        CANCEL
-                    </button>
-
-                    <button
-                        className="modal-btn modal-btn--primary"
-                        type="button"
-                        onClick={onApply}
-                        disabled={isApplyDisabled}
-                    >
-                        APPLY
-                    </button>
-                </div>
+                <button
+                    className="modal-btn modal-btn--primary"
+                    type="button"
+                    onClick={onApply}
+                    disabled={isApplyDisabled}
+                >
+                    APPLY
+                </button>
             </div>
-        </div>
+        </BaseModal>
     );
 }

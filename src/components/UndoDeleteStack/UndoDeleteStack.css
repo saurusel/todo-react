@@ -84,7 +84,10 @@
     stroke-dasharray: 100;
     stroke-dashoffset: 0;
 
-    animation: undo-ring-burn 5s linear forwards;
+    animation-name: undo-ring-burn;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+    animation-duration: calc(var(--undo-ttl) * 1s);
 }
 
 @keyframes undo-ring-burn {

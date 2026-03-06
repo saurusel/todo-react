@@ -1,6 +1,8 @@
 import { Theme } from "../app/theme";
 import { Task } from "../types/task";
 import { TaskList } from "./TaskList";
+import { InlineSvg } from "./InlineSvg";
+import { ICON_PLUS } from "../shared/assets/icons";
 
 type Props = {
     loading: boolean;
@@ -28,7 +30,7 @@ export function TasksSurface({
     return (
         <div className="tasks-surface">
             <button className="fab" type="button" onClick={onOpenAdd}>
-                <img className="icon-img" src="/icons/plus.svg" alt="" />
+                <InlineSvg className="icon-img" svg={ICON_PLUS} />
             </button>
 
             <section className="list-area">

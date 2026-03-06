@@ -1,43 +1,40 @@
-type Option = {
-    value: string;
+import { InlineSvg } from "./InlineSvg";
+import { ICON_CHEVRON_DOWN } from "../shared/assets/icons";
+
+export type SelectOption<T extends string> = {
+    value: T;
     label: string;
 };
 
-type Props = {
-    wrapClass: string;
-    actionToggle: string;
-    actionSet: string;
+type Props<T extends string> = {
+    className?: string;
+    value: T;
+    options: ReadonlyArray<SelectOption<T>>;
+
     isOpen: boolean;
-    currentLabel: string;
-    options: Option[];
     onToggle(): void;
-    onSelect(value: string): void;
+
+    onChange(value: T): void;
 };
 
-export function Select({
-    wrapClass,
-    actionToggle,
-    actionSet,
-    isOpen,
-    currentLabel,
+export function Select<T extends string>({
+    className,
+    value,
     options,
+    isOpen,
     onToggle,
-    onSelect,
-}: Props) {
+    onChange,
+}: Props<T>) {
+    const current = options.find((o) => o.value === value) ?? options[0];
+    const currentLabel = current?.label ?? "";
+
     return (
-        <div className={`select-wrap ${wrapClass} ${isOpen ? "is-open" : ""}`}>
-            <button
-                className="select-btn"
-                type="button"
-                data-action={actionToggle}
-                onClick={onToggle}
-            >
+        <div
+            className={`select-wrap ${className ?? ""} ${isOpen ? "is-open" : ""}`}
+        >
+            <button className="select-btn" type="button" onClick={onToggle}>
                 <span className="select-value">{currentLabel}</span>
-                <img
-                    className="select-icon"
-                    src="/icons/chevron-down.svg"
-                    alt=""
-                />
+                <InlineSvg className="select-icon" svg={ICON_CHEVRON_DOWN} />
             </button>
 
             <ul className="select-menu">
@@ -46,9 +43,7 @@ export function Select({
                         <button
                             className="select-option"
                             type="button"
-                            data-action={actionSet}
-                            data-value={o.value}
-                            onClick={() => onSelect(o.value)}
+                            onClick={() => onChange(o.value)}
                         >
                             {o.label}
                         </button>

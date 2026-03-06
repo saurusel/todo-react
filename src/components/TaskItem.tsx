@@ -1,5 +1,5 @@
 import { InlineSvg } from "./InlineSvg";
-import { ICON_EDIT, ICON_TRASH } from "../shared/assets/icons";
+import { ICON_EDIT, ICON_TRASH, ICON_CHECK_MARK } from "../shared/assets/icons";
 import { Task } from "../types/task";
 
 type Props = {
@@ -10,9 +10,18 @@ type Props = {
     onDelete?(id: number): void;
 };
 
-export function TaskItem({ task, isEntering, onToggle, onEdit, onDelete }: Props) {
+export function TaskItem({
+    task,
+    isEntering,
+    onToggle,
+    onEdit,
+    onDelete,
+}: Props) {
     return (
-        <li className={`todo-item${isEntering ? " is-entering" : ""}`} data-id={task.id}>
+        <li
+            className={`todo-item${isEntering ? " is-entering" : ""}`}
+            data-id={task.id}
+        >
             <label className="todo-main">
                 <input
                     className="checkbox-input"
@@ -21,12 +30,13 @@ export function TaskItem({ task, isEntering, onToggle, onEdit, onDelete }: Props
                     onChange={(e) => onToggle?.(task.id, e.target.checked)}
                 />
                 <span className="checkbox-box">
-                    <img src="/icons/check-mark.svg" alt="" />
+                    <InlineSvg
+                        className="checkbox-mark"
+                        svg={ICON_CHECK_MARK}
+                    />
                 </span>
 
-                <span className="todo-text">
-                    {task.title}
-                </span>
+                <span className="todo-text">{task.title}</span>
             </label>
 
             <div className="todo-actions">

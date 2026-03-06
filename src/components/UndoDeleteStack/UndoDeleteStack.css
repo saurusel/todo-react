@@ -61,6 +61,14 @@
     transform-origin: center;
 }
 
+.undo-delete-ring .countdown-ring-bg {
+    stroke: rgba(255, 255, 255, 0.35);
+}
+
+.undo-delete-ring .countdown-ring-fg {
+    stroke: var(--color-on-primary);
+}
+
 .countdown-ring-bg {
     fill: none;
     stroke: var(--color-control-bg);
@@ -98,8 +106,4 @@
 
 .undo-delete-label {
     font-size: 16px;
-}
-
-.undo-delete svg * {
-    stroke: currentColor;
 }

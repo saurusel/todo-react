@@ -16,18 +16,24 @@
     background: transparent;
 }
 
-.checkbox-box img {
+.checkbox-mark {
     width: 12px;
     height: 10px;
     opacity: 0;
 }
 
-.checkbox-input:checked + .checkbox-box {
-    background: var(--color-primary);
+.checkbox-mark svg {
+    width: 100%;
+    height: 100%;
+    display: block;
 }
 
-.checkbox-input:checked + .checkbox-box img {
+.checkbox-input:checked + .checkbox-box .checkbox-mark {
     opacity: 1;
+}
+
+.checkbox-input:checked + .checkbox-box {
+    background: var(--color-primary);
 }
 
 .checkbox-input:checked ~ .todo-text {

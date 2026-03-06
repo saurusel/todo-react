@@ -1,12 +1,15 @@
 import { RefObject } from "react";
 import { Theme } from "../../app/theme";
 import { FilterMode, SortMode } from "../../app/taskView";
-import { Select } from "../Select";
+import { Select, SelectOption } from "../Select";
 import { InlineSvg } from "../InlineSvg";
-import { ICON_SEARCH } from "../../shared/assets/icons";
+import {
+    ICON_SEARCH,
+    ICON_TRASH,
+    ICON_SUN,
+    ICON_MOON,
+} from "../../shared/assets/icons";
 import "./AppHeader.css";
-
-type Option<T extends string> = { value: T; label: string };
 
 type Props = {
     theme: Theme;
@@ -16,13 +19,13 @@ type Props = {
     onChangeSearch(value: string): void;
 
     filterMode: FilterMode;
-    filterOptions: Option<FilterMode>[];
+    filterOptions: SelectOption<FilterMode>[];
     isFilterOpen: boolean;
     onToggleFilter(): void;
     onSelectFilter(value: FilterMode): void;
 
     sortMode: SortMode;
-    sortOptions: Option<SortMode>[];
+    sortOptions: SelectOption<SortMode>[];
     isSortOpen: boolean;
     onToggleSort(): void;
     onSelectSort(value: SortMode): void;
@@ -53,12 +56,6 @@ export function AppHeader({
     deleteAllBtnRef,
     onDeleteAll,
 }: Props) {
-    const currentFilter =
-        filterOptions.find((f) => f.value === filterMode) || filterOptions[0];
-
-    const currentSort =
-        sortOptions.find((s) => s.value === sortMode) || sortOptions[0];
-
     return (
         <header className="app-header">
             <h1 className="app-title">todo list</h1>
@@ -67,7 +64,7 @@ export function AppHeader({
                 <div className="input-wrap">
                     <input
                         type="text"
-                        className="input js-search"
+                        className="input input--search"
                         placeholder="Search note..."
                         autoComplete="off"
                         value={searchInput}
@@ -79,25 +76,21 @@ export function AppHeader({
                 </div>
 
                 <Select
-                    wrapClass="js-filter-select"
-                    actionToggle="filter-toggle"
-                    actionSet="filter-set"
-                    isOpen={isFilterOpen}
-                    currentLabel={currentFilter.label}
+                    className="filter-select"
+                    value={filterMode}
                     options={filterOptions}
+                    isOpen={isFilterOpen}
                     onToggle={onToggleFilter}
-                    onSelect={(value) => onSelectFilter(value as FilterMode)}
+                    onChange={onSelectFilter}
                 />
 
                 <Select
-                    wrapClass="js-sort-select"
-                    actionToggle="sort-toggle"
-                    actionSet="sort-set"
-                    isOpen={isSortOpen}
-                    currentLabel={currentSort.label}
+                    className="sort-select"
+                    value={sortMode}
                     options={sortOptions}
+                    isOpen={isSortOpen}
                     onToggle={onToggleSort}
-                    onSelect={(value) => onSelectSort(value as SortMode)}
+                    onChange={onSelectSort}
                 />
 
                 <button
@@ -106,23 +99,18 @@ export function AppHeader({
                     type="button"
                     onClick={onDeleteAll}
                 >
-                    <img className="icon-img" src="/icons/trash.svg" alt="" />
+                    <InlineSvg className="icon-img" svg={ICON_TRASH} />
                     <span className="delete-all-label">delete all</span>
                 </button>
 
                 <button
-                    className="icon-btn js-theme-toggle"
+                    className="icon-btn"
                     type="button"
                     onClick={onToggleTheme}
                 >
-                    <img
+                    <InlineSvg
                         className="icon-img"
-                        src={
-                            theme === "dark"
-                                ? "/icons/sun.svg"
-                                : "/icons/moon.svg"
-                        }
-                        alt=""
+                        svg={theme === "dark" ? ICON_SUN : ICON_MOON}
                     />
                 </button>
             </div>

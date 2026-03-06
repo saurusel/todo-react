@@ -5,7 +5,11 @@ import { useAppDispatch } from "../../store/hooks";
 import { loginSuccess } from "../../store/authSlice";
 import { login as loginApi } from "../../api/auth";
 import { InlineSvg } from "../../components/InlineSvg";
-import { ICON_EYE, ICON_EYE_OFF } from "../../shared/assets/icons";
+import {
+    ICON_EYE,
+    ICON_EYE_OFF,
+    ICON_CHECK_MARK,
+} from "../../shared/assets/icons";
 import "./LoginPage.css";
 
 function generatePassword() {
@@ -155,7 +159,10 @@ export function LoginPage() {
                                 onChange={(e) => setAgreed(e.target.checked)}
                             />
                             <span className="checkbox-box">
-                                <img src="/icons/check-mark.svg" alt="" />
+                                <InlineSvg
+                                    className="checkbox-mark"
+                                    svg={ICON_CHECK_MARK}
+                                />
                             </span>
                             <span className="login-checkbox-text">
                                 я согласен, что я нахожусь на скоростной полосе

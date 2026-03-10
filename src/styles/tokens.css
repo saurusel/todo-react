@@ -1,0 +1,49 @@
+:root {
+    --font-main: "Kanit", sans-serif;
+
+    --color-bg: #f7f7f7;
+    --color-surface: #ffffff;
+
+    --color-text: #252525;
+    --color-text-dim: #8a8a8a;
+
+    --color-primary: #6c63ff;
+
+    --color-primary-pressed: #534cc2;
+
+    --color-control-bg: #ffffff;
+    --color-control-text: #252525;
+    --color-text-input: #c3c1e5;
+
+    --color-divider: #6c63ff;
+    --focus-ring: rgba(108, 99, 255, 0.85);
+    --color-deliting: #e50000;
+
+    --color-on-primary: #ffffff;
+    --color-border: rgba(0, 0, 0, 0.25);
+
+    --color-modal-backghround: rgba(37, 37, 37, 0.7);
+
+    --control-h: 38px;
+    --icon-btn: 38px;
+
+    --radius-5: 5px;
+}
+
+:root.theme-dark {
+    --color-bg: #252525;
+    --color-surface: #252525;
+
+    --color-text: #ffffff;
+    --color-text-undo-delete: #ffffff;
+    --color-text-dim: #8a8a8a;
+
+    --color-control-bg: #252525;
+    --color-control-text: #ffffff;
+    --color-text-input: #666666;
+
+    --color-border: #f7f7f7;
+    --focus-ring: rgba(255, 255, 255, 0.4);
+
+    --color-modal-backghround: rgba(37, 37, 37, 0.7);
+}

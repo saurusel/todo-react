@@ -1,0 +1,39 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-main);
+    background: var(--color-bg);
+    color: var(--color-text);
+}
+
+button,
+input,
+select {
+    font-family: inherit; /* то же, что и в родителе */
+    color: inherit;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+img {
+    display: block;
+    max-width: 100%;
+}
+
+ul,
+ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}

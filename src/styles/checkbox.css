@@ -1,0 +1,42 @@
+.checkbox-input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.checkbox-box {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--color-primary);
+    border-radius: 5px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    background: transparent;
+}
+
+.checkbox-mark {
+    width: 12px;
+    height: 10px;
+    opacity: 0;
+}
+
+.checkbox-mark svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.checkbox-input:checked + .checkbox-box .checkbox-mark {
+    opacity: 1;
+}
+
+.checkbox-input:checked + .checkbox-box {
+    background: var(--color-primary);
+}
+
+.checkbox-input:checked ~ .todo-text {
+    text-decoration: line-through;
+    color: var(--color-text-dim);
+}

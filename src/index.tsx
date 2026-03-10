@@ -1,16 +1,26 @@
-import { StrictMode } from 'react';
+import { makeServer } from "../server/mirage";
+import { AppRouter } from "./app/router/AppRouter";
+import { store } from "./store/store";
+import "./styles/app.css";
+import { setUnauthorizedHandler } from "./api/http";
+import { logout } from "./store/authSlice";
+import { ACCESS_TOKEN_COOKIE } from "./shared/constants/auth";
+
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { App } from "./App";
+import { Provider } from "react-redux";
 
-console.log("[bootstrap] index.tsx loaded");
+makeServer();
 
-const rootEl = document.getElementById("root");
-if (!rootEl) {
-    throw new Error("#root not found");
-}
+setUnauthorizedHandler(() => {
+    store.dispatch(logout());
+    document.cookie = `${ACCESS_TOKEN_COOKIE}=; Max-Age=0; path=/`;
+});
 
-createRoot(rootEl).render(
+createRoot(document.getElementById("root")!).render(
     <StrictMode>
-        <App />
+        <Provider store={store}>
+            <AppRouter />
+        </Provider>
     </StrictMode>,
 );

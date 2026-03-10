@@ -1,0 +1,90 @@
+.modal {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+}
+
+.modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--color-modal-backghround);
+}
+
+.modal-window {
+    position: relative;
+    width: 500px;
+    padding: 18px 30px;
+    border-radius: var(--radius-5);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+}
+
+.modal-title {
+    margin: 0 0 25px 0;
+    text-align: center;
+    font-size: 24px;
+    text-transform: uppercase;
+    color: var(--color-text);
+}
+
+.modal-input {
+    width: 100%;
+    margin: 0 0 138px 0;
+    height: var(--control-h);
+    border-radius: var(--radius-5);
+    border: 1px solid var(--color-border);
+    padding: 0 16px;
+    outline: none;
+    background: var(--color-control-bg);
+    color: var(--color-control-text);
+}
+
+.modal-input::placeholder {
+    color: var(--color-text-input);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+}
+
+.modal-btn {
+    display: flex;
+    align-items: center;
+    height: var(--control-h);
+    padding: 10px 22px;
+    border-radius: var(--radius-5);
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 18px;
+    text-transform: uppercase;
+}
+
+.modal-btn--ghost {
+    background: transparent;
+    border: 1px solid var(--color-primary);
+    color: var(--color-primary);
+}
+
+.modal-btn--primary {
+    background: var(--color-primary);
+    border: none;
+    color: var(--color-on-primary);
+}
+
+.modal-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.modal-message {
+    margin: 0 0 24px 0;
+    text-align: center;
+    font-size: 18px;
+    color: var(--color-text);
+}
+
+.modal-actions-center {
+    justify-content: center;
+}

@@ -1,0 +1,25 @@
+import eye from "../../../public/icons/eye.svg?raw";
+import eyeOff from "../../../public/icons/eye-off.svg?raw";
+import edit from "../../../public/icons/edit.svg?raw";
+import trash from "../../../public/icons/trash.svg?raw";
+import search from "../../../public/icons/search.svg?raw";
+import checkMark from "../../../public/icons/check-mark.svg?raw";
+import chevronDown from "../../../public/icons/chevron-down.svg?raw";
+import plus from "../../../public/icons/plus.svg?raw";
+import sun from "../../../public/icons/sun.svg?raw";
+import moon from "../../../public/icons/moon.svg?raw";
+import undoArrow from "../../../public/icons/undo-arrow.svg?raw";
+import countdown from "../../../public/icons/countdown.svg?raw";
+
+export const ICON_EYE = eye;
+export const ICON_EYE_OFF = eyeOff;
+export const ICON_EDIT = edit;
+export const ICON_TRASH = trash;
+export const ICON_SEARCH = search;
+export const ICON_CHECK_MARK = checkMark;
+export const ICON_CHEVRON_DOWN = chevronDown;
+export const ICON_PLUS = plus;
+export const ICON_SUN = sun;
+export const ICON_MOON = moon;
+export const ICON_UNDO_ARROW = undoArrow;
+export const ICON_COUNTDOWN = countdown;
